@@ -1,0 +1,47 @@
+<!DOCTYPE character>
+<character name="bf" image="characters/BOYFRIEND" icon="bf"
+    scale="1"
+    antialiasing="true"
+    flipX="true"
+    time="4">
+
+    <position x="0" y="350"/>
+    <cameraOffset x="0" y="0"/>
+
+    <animations>
+        <animation name="idle"
+            prefix="BF idle dance"
+            fps="24"
+            loop="false"
+            offsetX="0"
+            offsetY="0"/>
+
+        <animation name="singLEFT"
+            prefix="BF NOTE LEFT"
+            fps="24"
+            loop="false"
+            offsetX="5"
+            offsetY="4"/>
+
+        <animation name="singDOWN"
+            prefix="BF NOTE DOWN"
+            fps="24"
+            loop="false"
+            offsetX="-10"
+            offsetY="-41"/>
+
+        <animation name="singUP"
+            prefix="BF NOTE UP"
+            fps="24"
+            loop="false"
+            offsetX="-13"
+            offsetY="67"/>
+
+        <animation name="singRIGHT"
+            prefix="BF NOTE RIGHT"
+            fps="24"
+            loop="false"
+            offsetX="-49"
+            offsetY="7"/>
+    </animations>
+</character>

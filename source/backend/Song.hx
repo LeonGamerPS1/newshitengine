@@ -10,7 +10,10 @@ typedef SwagSong =
 
 	var player1:String;
 	var player2:String;
+	var gfVersion:String;
+	var stage:String;
 	var validScore:Bool;
+	var folder:String;
 }
 
 typedef SwagSection =
@@ -46,13 +49,14 @@ class Song
 	{
 		var rawJson = OpenFLAssets.getText(Paths.getPath('songs/$folder/$jsonInput.json')).trim();
 
-		return parseJSONshit(rawJson);
+		return parseJSONshit(rawJson, folder);
 	}
 
-	public static function parseJSONshit(rawJson:String):SwagSong
+	public static function parseJSONshit(rawJson:String, f):SwagSong
 	{
 		var swagShit:SwagSong = cast Json.parse(rawJson).song;
-		swagShit.validScore = true;
+		swagShit.folder = f;
+		swagShit.gfVersion ??= 'gf';
 		return swagShit;
 	}
 }

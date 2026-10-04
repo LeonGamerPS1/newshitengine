@@ -1,5 +1,7 @@
 package objects;
 
+import shaders.RGB;
+
 class Actor extends FlxSprite
 {
 	public var lane:Int = 0;
@@ -8,7 +10,12 @@ class Actor extends FlxSprite
 
 	static public var dirs = ['left', 'down', 'up', 'right'];
 
-    public static var Width:Float = 160 * 0.7;
+	public static var Width:Float = 160 * 0.7;
+
+	public var noteShader:RGB;
+	public var holding:Bool = false;
+
+	public var flipScroll:Bool = false;
 
 	public function new(lane:Int = 0, texture:String = 'NOTE_assets')
 	{
@@ -21,6 +28,7 @@ class Actor extends FlxSprite
 	{
 		if (texture == lastTexture)
 			return;
+		lastTexture = texture;
 		final n = dirs[lane];
 		frames = Paths.getSparrowAtlas(texture);
 		animation.addByPrefix('grey', 'arrow' + n.toUpperCase(), 24, false);
@@ -29,7 +37,7 @@ class Actor extends FlxSprite
 		playAnim('grey');
 		scale.setXY(.7);
 		updateHitbox();
-        antialiasing = true;
+		antialiasing = true;
 	}
 
 	override function update(elapsed:Float)
@@ -39,7 +47,7 @@ class Actor extends FlxSprite
 			resetAnim -= elapsed;
 			if (resetAnim <= 0)
 			{
-				playAnim('static');
+				playAnim('grey');
 				resetAnim = 0;
 			}
 		}

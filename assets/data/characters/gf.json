@@ -1,0 +1,80 @@
+{
+	"time": 4,
+	"scale": 1,
+
+	"icon": "gf",
+	"image": "characters/GF_assets",
+
+	"antialiasing": true,
+	"flipX": false,
+
+	"cam_offset": [0, 0],
+	"pos_offset": [-100, 0],
+
+	"animations": [
+		{
+			"name": "singLEFT",
+			"fps": 24,
+			"prefix": "GF left note",
+			"looped": false,
+			"offsets": [0, -19],
+			"indices": []
+		},
+		{
+			"name": "singDOWN",
+			"fps": 24,
+			"prefix": "GF Down Note",
+			"looped": false,
+			"offsets": [0, -20],
+			"indices": []
+		},
+		{
+			"name": "singUP",
+			"fps": 24,
+			"prefix": "GF Up Note",
+			"looped": false,
+			"offsets": [0, 4],
+			"indices": []
+		},
+		{
+			"name": "singRIGHT",
+			"fps": 24,
+			"prefix": "GF Right Note",
+			"looped": false,
+			"offsets": [0, -20],
+			"indices": []
+		},
+		{
+			"name": "danceLeft",
+			"fps": 24,
+			"prefix": "GF Dancing Beat",
+			"looped": false,
+			"offsets": [0, -9],
+			"indices": [30, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+		},
+		{
+			"name": "danceRight",
+			"fps": 24,
+			"prefix": "GF Dancing Beat",
+			"looped": false,
+			"offsets": [0, -9],
+			"indices": [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+		},
+		{
+			"name": "hairBlow",
+			"fps": 24,
+			"prefix": "GF Dancing Beat Hair blowing",
+			"looped": true,
+			"offsets": [45, -8],
+			"indices": [0, 1, 2, 3]
+		},
+		{
+			"name": "hairFall",
+			"fps": 24,
+			"prefix": "GF Dancing Beat Hair Landing",
+			"looped": false,
+			"offsets": [0, -9],
+			"indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+		}
+	]
+}

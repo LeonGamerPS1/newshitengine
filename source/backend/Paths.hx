@@ -1,5 +1,7 @@
 package backend;
 
+import animate.FlxAnimateFrames;
+import animate.FlxAnimateFrames;
 import flixel.graphics.frames.FlxFramesCollection;
 import flixel.math.FlxMatrix;
 import haxe.MainLoop;
@@ -14,11 +16,12 @@ class Paths
 
 	public static function clearGraphics()
 	{
-		for (img in cachedImages)
+		for (k=>img in cachedImages)
 		{
 			if (img == null || img.destroyOnNoUse)
 				continue;
 
+			OpenFLAssets.cache.clear(k);
 			img.persist = false;
 			@:bypassAccessor
 			img.destroyOnNoUse = true;
@@ -145,6 +148,26 @@ class Paths
 		cachedAtlases.set(paths.toString(), megaAtlas);
 
 		return megaAtlas;
+	}
+
+	public static function getAnimateAtlas(path:String):FlxAnimateFrames
+	{
+		var path = getPath('images/$path');
+		final animJSON = path + "/Animation.json";
+
+		if (cachedAtlases.exists(animJSON))
+			return cast cachedAtlases.get(animJSON);
+		if (!OpenFLAssets.exists(animJSON))
+		{
+			FlxG.log.warn('oh noes!!! atlas not here!!! $path');
+			return null;
+		}
+
+		var atlas = FlxAnimateFrames.fromAnimate(path);
+		atlas.parent?.bitmap.disposeImage();
+		cachedAtlases.set(animJSON, atlas);
+		atlas.parent.persist = true;
+		return atlas;
 	}
 
 	/**

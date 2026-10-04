@@ -25,9 +25,9 @@ class Conductor
 	public static var curBeat:Float = 0;
 	public static var curSection:Float = 0;
 
-	public static var onStep:Event<Float->Void> = new Event<Float->Void>();
-	public static var onBeat:Event<Float->Void> = new Event<Float->Void>();
-	public static var onMeasure:Event<Float->Void> = new Event<Float->Void>();
+	public static var onStep:Event<Int->Void> = new Event<Int->Void>();
+	public static var onBeat:Event<Int->Void> = new Event<Int->Void>();
+	public static var onMeasure:Event<Int->Void> = new Event<Int->Void>();
 
 	static function set_time(value:Float):Float
 	{
@@ -73,7 +73,7 @@ class Conductor
 	{
 		var lastTimeChange:SongTmPoint = {time: 0, bpm: bpm};
 		for (timeChange in timeChanges)
-			if (timeChange.time <= (time - offset))
+			if (timeChange.time <= (time))
 				lastTimeChange = timeChange;
 		return lastTimeChange;
 	}
@@ -159,6 +159,11 @@ class Conductor
 		curStep = 0;
 		curBeat = 0;
 		curSection = 0;
+
+		onStep.removeAll();
+		onBeat.removeAll();
+		onMeasure.removeAll();
+
 
 		timeChanges = [];
 	}
