@@ -164,8 +164,7 @@ class Character extends FlxAnimate
 
 	public function hitNote(note:Note)
 	{
-		if (note.character != null && note.character != this)
-			return;
+	
 		playAnim(sing[note.lane % sing.length], true);
 		if (animExists(sing[note.lane % sing.length]))
 			holdTimer = (Conductor.stepLength * json.time) / 1000;
@@ -219,9 +218,6 @@ class Character extends FlxAnimate
 			}
 		}
 	}
-
-
-	
 
 	override function destroy()
 	{

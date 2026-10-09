@@ -1,5 +1,6 @@
 package states;
 
+import backend.ScriptLoader;
 import backend.Song;
 import flixel.addons.display.FlxGridOverlay;
 import flixel.math.FlxPoint;
@@ -8,6 +9,7 @@ import foxlite.extras.FoxFPSCamera;
 import foxlite.flixel.FoxFlxSprite;
 import foxlite.loaders.FoxLoaderUtil;
 import foxlite.renderer.FoxRenderer;
+import modding.scripts.BaseScript;
 import objects.Actor;
 import objects.ActorLine;
 import objects.Note;
@@ -33,7 +35,7 @@ class PlayState extends FlxState
 
 	public var camHUD:FlxCamera;
 	public var hud:FlxGroup;
-	public var defaultCamZoom(default, null):Float = 1;
+	public var defaultCamZoom:Float = 1;
 
 	public var healthBar:HealthBar;
 
@@ -61,6 +63,8 @@ class PlayState extends FlxState
 	public var stage:BaseStage;
 	public var scoreTxt:FlxText;
 
+	public var scripts:Array<BaseScript> = [];
+
 	override public function create()
 	{
 		super.create();
@@ -73,13 +77,17 @@ class PlayState extends FlxState
 		hud.cameras = [camHUD];
 		add(hud);
 
-		song ??= Song.loadFromJson('hard', 'ice-roses');
+		song ??= Song.loadFromJson('hard', 'careless');
 		Conductor.reset();
 		Conductor.bpm = song.bpm;
 		Conductor.time = -Conductor.beatLength * 5;
 		Conductor.onBeat.add(onBeat);
 		Conductor.onMeasure.add(onMeasure);
 		Conductor.onStep.add(onStepHit);
+
+		loadScript(Paths.getPath('data/stages/${song.stage ?? 'stage'}.hx'));
+		loadScripts(Paths.readAssetsDirectoryFromLibrary('data/scripts', 'TEXT', 'hx'));
+		loadScripts(Paths.readAssetsDirectoryFromLibrary('songs/${song.folder}/scripts', 'TEXT', 'hx'));
 
 		var instPath = 'songs/${song.folder}/Inst';
 		inst = FlxG.sound.list.add(new FlxSound());
@@ -93,8 +101,10 @@ class PlayState extends FlxState
 		var seclength = Conductor.measureLength;
 		var bpm = song.bpm;
 
+		call('onCreate');
 		initStage();
 		initChars();
+
 		stage.onCreatePost();
 
 		enemyLine = addActorLine(FlxG.width * .25, 50);
@@ -104,7 +114,9 @@ class PlayState extends FlxState
 		playerLine.autoPlay = false;
 		playerLine.characters.push(bf);
 
-		for(sL in actorLines)
+		call('onStageCreatePost', [song.stage ?? 'stage']);
+
+		for (sL in actorLines)
 		{
 			sL.hitSignal.add(hitNote);
 			sL.missSignal.add(miss);
@@ -126,7 +138,7 @@ class PlayState extends FlxState
 		hud.add(iconP2);
 
 		scoreTxt = new FlxText();
-		scoreTxt.setFormat(Paths.getFont('vcr'), 15);
+		scoreTxt.setFormat(Paths.getFont('vcr'), 16);
 		hud.add(scoreTxt);
 
 		for (section in song.notes)
@@ -152,6 +164,7 @@ class PlayState extends FlxState
 
 				var targetActorline:ActorLine = isPlayer ? playerLine : enemyLine;
 				var note = targetActorline.makeNote(time, dir % 4, length, type);
+				call('onNoteCreate', [note, targetActorline]);
 
 				var steplength = seclength / 16;
 				if (length > 0)
@@ -162,6 +175,8 @@ class PlayState extends FlxState
 					{
 						var hold = targetActorline.makeHoldNote(time + (steplength * i) + (steplength / 2), dir % 4, steplength, type, i == holds - 1);
 						hold.parentNote = note;
+						call('onNoteSustainCreate', [hold, targetActorline]);
+						call('onNoteCreate', [hold, targetActorline]);
 					}
 				}
 			}
@@ -171,35 +186,47 @@ class PlayState extends FlxState
 
 		enemyLine.speed = playerLine.speed = song.speed;
 		FlxG.camera.follow(camtracker, LOCKON, 0.05 * stageJSON.camera_speed);
-		startedCountdown = true;
+		startedCountdown = call('shouldCountdownStart') ?? true;
 
-		/*
-			FoxRenderer.initLibs();
-			FoxLoaderUtil.initPathClass(Paths);
-
-			// Scene
-			scene = new FoxScene(FlxG.width, FlxG.height);
-			scene.scrollFactor.set(0, 0);
-			add(scene);
-
-			// Camera
-			cam = new FoxFPSCamera();
-			cam.bgColor = FlxColor.PURPLE;
-
-			// Add our camera to the scene
-			scene.foxCameras.push(cam);
-			var grid:FlxSprite = new FlxSprite(0,0,FlxGridOverlay.createGrid(50,50,1280,720,true,0xFFFFFFFF,0xFF807D7D));
-			insert(0,grid);
-
-			var fx:FoxFlxSprite = new FoxFlxSprite(grid);
-			fx.rotation.x = 45;
-			scene.add(fx);
-		 */
+		call('onCreatePost');
+		trace(scripts);
 	}
 
 	public var stageJSON:StageFile;
 	public var daddyCamOffset = [0.0, 0.0];
 	public var bfCamOffset = [0.0, 0.0];
+
+	function loadScript(s:String)
+	{
+		scripts.push(ScriptLoader.loadScript(s));
+	}
+
+	function loadScripts(s:Array<String>)
+	{
+		for (script in ScriptLoader.loadScripts(s))
+			scripts.push(script);
+	}
+
+	function call(fn:String, ?args:Array<Dynamic>):Dynamic
+	{
+		var ret:Dynamic = null;
+
+		for (shi in scripts)
+		{
+			var ret_s = shi.call(fn, args);
+			if (ret_s != null)
+				ret = ret_s;
+		}
+		return ret;
+	}
+
+	function set(val:String, valVal:Dynamic)
+	{
+		for (shi in scripts)
+		{
+			shi.setVariable(val, valVal);
+		}
+	}
 
 	function initStage()
 	{
@@ -230,15 +257,20 @@ class PlayState extends FlxState
 			case 'stage':
 				stage = new Week1();
 		}
-
+		add(stage);
 		stage.onCreate();
+
+		call('onStageCreate', [stage1lol]);
 	}
 
 	var scene:FoxScene;
 	var cam:FoxFPSCamera;
 
+	var lastFollowedChar:Character;
+
 	public function focusOnChar(char:Character)
 	{
+		lastFollowedChar = char;
 		if (char.player)
 		{
 			camtracker.setPosition(char.getMidpoint().x - 100, char.getMidpoint().y - 100);
@@ -296,18 +328,21 @@ class PlayState extends FlxState
 
 	public var score:Int = 0;
 	public var misses:Int = 0;
-	public var accuracy:Int = 0;
+	public var accuracy:Float = 0.0;
 
 	override public function update(elapsed:Float)
 	{
+		call('onUpdate', [elapsed]);
 		FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, 0.95);
 		camHUD.zoom = FlxMath.lerp(1, camHUD.zoom, 0.95);
-		if(healthBar.value != health) {
+		if (healthBar.value != health)
+		{
 			healthBar.value = health;
 			health = healthBar.value;
 		}
 
-		scoreTxt.text = 'Score:$score    Misses:$misses    Accuracy:$accuracy';
+		final accuracy = FlxMath.roundDecimal(accuracy, 2);
+		scoreTxt.text = 'Score:$score    Misses:$misses    Accuracy:$accuracy%';
 		scoreTxt.y = healthBar.y + healthBar.height;
 		scoreTxt.screenCenter(X);
 		if (startedCountdown && !startedSong)
@@ -329,6 +364,7 @@ class PlayState extends FlxState
 			+ (iconP2.frameWidth * iconP2.baseScale / 4),
 			healthBar.center.y
 			- (iconP2.frameHeight / 2 * iconP2.baseScale));
+		call('onUpdatePost', [elapsed]);
 	}
 
 	function startSong()
@@ -336,6 +372,7 @@ class PlayState extends FlxState
 		startedSong = true;
 		inst.play();
 		voices.play();
+		call('onStartSong');
 	}
 
 	public function zoom()
@@ -349,15 +386,18 @@ class PlayState extends FlxState
 	public function onStepHit(step:Int)
 	{
 		stage.onStepHit(step);
+		call('onStepHit', [step]);
 	}
 
-	public function onBeat(b)
+	public function onBeat(b:Int)
 	{
 		if (b % zoomInterval == 0)
 			zoom();
 		iconP1.bump();
 		iconP2.bump();
 		stage.onBeatHit(b);
+
+		call('onBeatHit', [b]);
 	}
 
 	public function onMeasure(sections:Int)
@@ -367,19 +407,43 @@ class PlayState extends FlxState
 		if (section != null)
 		{
 			focusOnChar(section.mustHitSection ? bf : dad);
+			call('onCameraMove', [lastFollowedChar, !lastFollowedChar.player]); // character, is the dad  or not
 		}
+
+		call('onSectionHit', [sections]);
 	}
 
 	public var health:Float = 1;
 
+	public var earnedAccuracyPoints:Float = 0.0;
+	public var maxAccuracyPoints:Float = 0.0;
+
 	public function hitNote(note:Note)
 	{
 		if (!note.actorline.autoPlay)
+		{
 			health += 0.023;
+			var timing:Float = Math.abs(Conductor.time - note.time);
+			if (!note.isTrail)
+			{
+				var quantizedTiming:Float = Math.floor(timing * 5) / 5;
+				var ratio:Float = 1 - (quantizedTiming / Conductor.sfz);
+
+				score += Math.floor(350 * ratio);
+			}
+			accuracy = ((earnedAccuracyPoints += (timing <= 45 ? 100 : timing <= 90 ? 75 : timing <= 135 ? 40 : 20)) / (maxAccuracyPoints += 100)) * 100;
+		}
+		call('hitNote', [note, note.actorline.autoPlay]);
 	}
 
 	public function miss(dir:Int)
 	{
+		misses++;
 		health -= 0.05;
+		call('missDirection', [dir]);
+
+		
+		accuracy = (earnedAccuracyPoints / (maxAccuracyPoints += 100)) * 100;
+		score -= 350;
 	}
 }

@@ -4,6 +4,7 @@ import backend.input.Controls;
 import debug.FPS_Mem;
 import flixel.FlxGame;
 import haxe.io.Path;
+import hxscript.compile.Compiler;
 import lime.app.Application;
 import openfl.display.Sprite;
 
@@ -53,5 +54,7 @@ class Main extends Sprite
 		addChild(new FlxGame(0, 0, PlayState, 60, 60));
 		var fps:FPS_Mem = new FPS_Mem(10, 10, 0xffffff);
 		addChild(fps);
+
+		trace(Compiler.unavailable());
 	}
 }

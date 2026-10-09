@@ -111,7 +111,7 @@ class ActorLine extends FlxGroup
 			note.updateSusLength(speed);
 
 		var actor:Actor = actors.members[note.lane];
-		note.setPosition(actor.x + actor.width * .5 - note.width * .5, actor.y + note.getDistance(actor, speed));
+		note.setPosition(actor.x + actor.width * .5 - note.width * .5 + note.offsetX, actor.y + note.getDistance(actor, speed));
 
 		if (autoPlay && note.hit && !note.hitByenemy)
 		{
@@ -137,14 +137,22 @@ class ActorLine extends FlxGroup
 		var actor:Actor = actors.members[note.lane];
 		actor.playAnim('confirm');
 		note.hit = true;
-		for (char in characters)
-			char.hitNote(note);
+
+		if (note.character != null)
+		{
+			note.character.hitNote(note);
+		}
+		else
+		{
+			for (char in characters)
+			{
+				char.hitNote(note);
+			}
+		}
 
 		if (autoPlay)
 		{
 			actor.resetAnim = .15;
-			//	if (!note.isTrail)
-			//		spawnSplashOnStrum(actor);
 		}
 		hitSignal.dispatch(note);
 		if (!note.isTrail)

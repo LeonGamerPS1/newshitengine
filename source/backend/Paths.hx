@@ -16,7 +16,7 @@ class Paths
 
 	public static function clearGraphics()
 	{
-		for (k=>img in cachedImages)
+		for (k => img in cachedImages)
 		{
 			if (img == null || img.destroyOnNoUse)
 				continue;
@@ -101,6 +101,8 @@ class Paths
 
 	public static function exists(s:String, ?type:AssetType)
 	{
+		if(OpenFLAssets.exists(s, type))
+			return true;
 		var path = getPath(s);
 		return OpenFLAssets.exists(path, type);
 	}
@@ -223,6 +225,13 @@ class Paths
 	{
 		var path = fragShader(shaderName);
 		return FlxG.assets.getText(path, false);
+	}
+
+	public static function getText(path:String)
+	{
+		if(OpenFLAssets.exists(path))
+			return OpenFLAssets.getText(path);
+		return OpenFLAssets.getText(getPath(path));
 	}
 }
 
