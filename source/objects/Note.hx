@@ -158,9 +158,17 @@ class Note extends FlxSprite
 		
 			}
 
-			clipRect = swagRect;
+			clipRect = swagRect.round();
 		
 				
 		}
+	}
+
+	override function set_clipRect(rect:FlxRect) {
+		@:bypassAccessor clipRect = rect;
+
+		if(frames !=  null)
+			frame = frames.frames[animation.frameIndex];
+		return rect;
 	}
 }

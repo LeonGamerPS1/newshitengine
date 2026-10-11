@@ -43,9 +43,7 @@
 	<haxelib name="flixel" />
 	<haxelib name="flixel-animate" />
 	<haxelib name="foxlite" />
-	<haxelib name="hxscript" />
-	<haxelib name="luahscript" />
-
+	<haxelib name="hscript-insanity" unless="html5"/>
 
 
 

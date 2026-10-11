@@ -68,6 +68,7 @@ class PlayState extends FlxState
 	override public function create()
 	{
 		super.create();
+
 		camHUD = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
 		FlxG.camera.bgColor = FlxColor.GRAY;
@@ -77,7 +78,7 @@ class PlayState extends FlxState
 		hud.cameras = [camHUD];
 		add(hud);
 
-		song ??= Song.loadFromJson('hard', 'careless');
+		song ??= Song.loadFromJson('hard', 'ice-roses');
 		Conductor.reset();
 		Conductor.bpm = song.bpm;
 		Conductor.time = -Conductor.beatLength * 5;
@@ -95,11 +96,8 @@ class PlayState extends FlxState
 
 		var instPath = 'songs/${song.folder}/Voices';
 		voices = FlxG.sound.list.add(new FlxSound());
-		voices.load(Paths.getSound(instPath, true), false);
 
-		var time = .0;
-		var seclength = Conductor.measureLength;
-		var bpm = song.bpm;
+		voices.load(Paths.getSound(instPath, true), false);
 
 		call('onCreate');
 		initStage();
@@ -111,7 +109,7 @@ class PlayState extends FlxState
 		enemyLine.characters.push(dad);
 
 		playerLine = addActorLine(FlxG.width * .75, 50);
-		playerLine.autoPlay = false;
+		//playerLine.autoPlay = false;
 		playerLine.characters.push(bf);
 
 		call('onStageCreatePost', [song.stage ?? 'stage']);
@@ -141,52 +139,73 @@ class PlayState extends FlxState
 		scoreTxt.setFormat(Paths.getFont('vcr'), 16);
 		hud.add(scoreTxt);
 
+		focusOnChar(bf);
+		var currentBPM = song.bpm;
+		var seclength:Float = (60000 / currentBPM) * 4;
+		var sectionStartTime:Float = 0;
+
+		Conductor.addTimeChangeAt(0, currentBPM);
+
 		for (section in song.notes)
 		{
-			if (section.changeBPM)
+			if (section.changeBPM && section.bpm != currentBPM)
 			{
-				bpm = section.bpm;
-				seclength = (bpm / 60000) * 4;
-				Conductor.addTimeChangeAt(time, bpm);
+				currentBPM = section.bpm;
+
+				seclength = (60000 / currentBPM) * 4;
+
+				Conductor.addTimeChangeAt(sectionStartTime, currentBPM);
 			}
-			time += seclength;
+			else
+			{
+				var beatsInSec:Float = 4;
+				seclength = (60000 / currentBPM) * beatsInSec;
+			}
+
+			var steplength = seclength / 16;
 
 			for (note in section.sectionNotes)
 			{
-				var time:Float = note[0];
+				var noteTime:Float = note[0];
 				var dir:Int = note[1];
-				var length:Float = note[2] is String ? 0.0 : note[2];
-				var type = note[3] ?? '';
+				var length:Float = (note[2] is String) ? 0.0 : note[2];
+				var type = Std.string(note[3]);
 
 				var isPlayer = section.mustHitSection;
 				if (dir > 3)
 					isPlayer = !section.mustHitSection;
 
 				var targetActorline:ActorLine = isPlayer ? playerLine : enemyLine;
-				var note = targetActorline.makeNote(time, dir % 4, length, type);
-				call('onNoteCreate', [note, targetActorline]);
+				var newNote = targetActorline.makeNote(noteTime, dir % 4, length, type);
+				call('onNoteCreate', [newNote, targetActorline]);
 
-				var steplength = seclength / 16;
 				if (length > 0)
 				{
 					var holds = Math.floor(length / steplength);
 
 					for (i in 0...holds)
 					{
-						var hold = targetActorline.makeHoldNote(time + (steplength * i) + (steplength / 2), dir % 4, steplength, type, i == holds - 1);
-						hold.parentNote = note;
+						var hold = targetActorline.makeHoldNote(noteTime + (steplength * i) + (steplength / 2), dir % 4, Conductor.stepLength, type,
+							i == holds - 1);
+						hold.parentNote = newNote;
+		
 						call('onNoteSustainCreate', [hold, targetActorline]);
 						call('onNoteCreate', [hold, targetActorline]);
 					}
 				}
 			}
+
+			sectionStartTime += seclength;
 		}
+
+		Conductor.mapBPMChanges();
+
 		playerLine.sortPremade();
 		enemyLine.sortPremade();
 
 		enemyLine.speed = playerLine.speed = song.speed;
 		FlxG.camera.follow(camtracker, LOCKON, 0.05 * stageJSON.camera_speed);
-		startedCountdown = call('shouldCountdownStart') ?? true;
+		startedCountdown = true;
 
 		call('onCreatePost');
 		trace(scripts);
@@ -341,8 +360,8 @@ class PlayState extends FlxState
 			health = healthBar.value;
 		}
 
-		final accuracy = FlxMath.roundDecimal(accuracy, 2);
-		scoreTxt.text = 'Score:$score    Misses:$misses    Accuracy:$accuracy%';
+		final accuracye = FlxMath.roundDecimal(accuracy, 2);
+		scoreTxt.text = 'Score:$score    Misses:$misses    Accuracy:$accuracye%';
 		scoreTxt.y = healthBar.y + healthBar.height;
 		scoreTxt.screenCenter(X);
 		if (startedCountdown && !startedSong)
@@ -442,7 +461,6 @@ class PlayState extends FlxState
 		health -= 0.05;
 		call('missDirection', [dir]);
 
-		
 		accuracy = (earnedAccuracyPoints / (maxAccuracyPoints += 100)) * 100;
 		score -= 350;
 	}

@@ -5,7 +5,7 @@
   "image": "characters/bfPixel",
   "antialiasing": false,
   "flipX": true,
-  "iconScale":4.6875,
+  "iconScale":1,
   "cam_offset": [50, -160],
   "pos_offset": [80, 480],
   "animations": [

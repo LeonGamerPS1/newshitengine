@@ -1,6 +1,7 @@
 package modding.scripts;
 
-import hxscript.Script;
+import insanity.Script;
+import objects.BGSprite;
 
 class Hscript extends BaseScript
 {
@@ -27,6 +28,7 @@ class Hscript extends BaseScript
 		setVariable('PlayState', PlayState);
 		setVariable('Paths', Paths);
 		setVariable('Conductor', Conductor);
+		setVariable('BGSprite', BGSprite);
 		setVariable('game', FlxG.state);
 
 

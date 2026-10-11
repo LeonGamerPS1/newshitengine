@@ -45,6 +45,14 @@ class ActorLine extends FlxGroup
 		regenerateActors();
 
 		Conductor.onBeat.add(beatHit);
+
+		botplayTxt = new FlxText(sX, 10, FlxG.width - 800, "[CPU]", 32);
+		botplayTxt.setFormat(Paths.getFont("vcr"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		botplayTxt.scrollFactor.set();
+		botplayTxt.borderSize = 1.25;
+		botplayTxt.visible = autoPlay;
+		botplayTxt.x = sX - botplayTxt.width * .5;
+		add(botplayTxt);
 	}
 
 	public function spawnSplashOnStrum(s:Actor)
@@ -173,10 +181,11 @@ class ActorLine extends FlxGroup
 		missSignal.dispatch(dir);
 	}
 
+	public var botplaySine:Float = 0;
+	public var botplayTxt:FlxText;
+
 	override function update(elapsed:Float)
 	{
-		super.update(elapsed);
-
 		if (unspawnNotes.length > 0)
 		{
 			var n = unspawnNotes[0];
@@ -185,6 +194,15 @@ class ActorLine extends FlxGroup
 				notes.insert(0, n);
 				unspawnNotes.remove(n);
 			}
+		}
+		super.update(elapsed);
+
+		if (botplayTxt.visible != autoPlay)
+			botplayTxt.visible = autoPlay;
+		if (botplayTxt != null && botplayTxt.visible)
+		{
+			botplaySine += 180 * elapsed;
+			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
 		if (!autoPlay)
