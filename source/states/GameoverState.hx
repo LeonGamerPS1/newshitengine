@@ -67,6 +67,7 @@ class GameoverState extends FlxSubState
 			fart = true;
 			snd.stop();
 			snd = FlxG.sound.play(Paths.getSound(deathMusEnd));
+			char.playAnim('deathConfirm');
 			FlxG.camera.fade(FlxColor.BLACK, 2, false, function()
 			{
 				FlxG.switchState(new PlayState());
