@@ -56,6 +56,38 @@
       "looped": false,
       "offsets": [0, 0],
       "indices": []
+    },
+        {
+      "name": "singLEFTmiss",
+      "fps": 24,
+      "prefix": "BF LEFT MISS instance",
+      "looped": false,
+      "offsets": [0, 0],
+      "indices": []
+    },
+    {
+      "name": "singDOWNmiss",
+      "fps": 24,
+      "prefix": "BF DOWN MISS instance",
+      "looped": false,
+      "offsets": [0, 0],
+      "indices": []
+    },
+    {
+      "name": "singUPmiss",
+      "fps": 24,
+      "prefix": "BF UP MISS instance",
+      "looped": false,
+      "offsets": [0, 0],
+      "indices": []
+    },
+    {
+      "name": "singRIGHTmiss",
+      "fps": 24,
+      "prefix": "BF RIGHT MISS instance",
+      "looped": false,
+      "offsets": [0, 0],
+      "indices": []
     }
   ]
 }

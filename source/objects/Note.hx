@@ -24,6 +24,17 @@ class Note extends FlxSprite
 	public var canBeHit(get, null):Bool;
 	public var character:Character;
 
+	/** If set, will load the texture instead of default on load**/
+	public static var currentSkin:String;
+
+	/**Useful for pixel notes and other note skins are smaller or bigger than usual**/
+	public static var currentNoteScale:Float = .7;
+
+	/**
+	 * Disable this if your noteskin is too blurry, enable this if it looks too pixelated
+	 */
+	public static var currentBlurring:Bool = true;
+
 	public static var arrowRGB:Array<Array<FlxColor>> = [
 		[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
 		[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
@@ -58,15 +69,15 @@ class Note extends FlxSprite
 	{
 		if (texture == lastTexture)
 			return;
-		lastTexture = texture;
+		lastTexture = currentSkin ?? texture;
 		final n = dirs[lane];
-		frames = Paths.getSparrowAtlas(texture);
+		frames = Paths.getSparrowAtlas(lastTexture);
 		animation.addByPrefix('colored', n + '0', 24);
 		animation.addByPrefix('segment', n + ' hold piece0', 24);
 		animation.addByPrefix('tail', n + ' hold end0', 24);
 		playAnim('colored');
 
-		scale.setXY(.7);
+		scale.setXY(currentNoteScale);
 
 		if (isTrail)
 		{
@@ -77,7 +88,7 @@ class Note extends FlxSprite
 			offsetY = -7;
 		}
 		updateHitbox();
-		antialiasing = true;
+		antialiasing = currentBlurring;
 	}
 
 	public function playAnim(anim:String)
@@ -147,7 +158,6 @@ class Note extends FlxSprite
 					swagRect.width = frameWidth;
 					swagRect.height = (center - y) / scale.y;
 					swagRect.y = frameHeight - swagRect.height;
-				
 				}
 			}
 			else if (y <= center)
@@ -155,19 +165,19 @@ class Note extends FlxSprite
 				swagRect.y = (center - y) / scale.y;
 				swagRect.width = width / scale.x;
 				swagRect.height = (height / scale.y) - swagRect.y;
-		
 			}
 
 			clipRect = swagRect.round();
-		
-				
 		}
 	}
 
-	override function set_clipRect(rect:FlxRect) {
+	public var suffix:String = "";
+
+	override function set_clipRect(rect:FlxRect)
+	{
 		@:bypassAccessor clipRect = rect;
 
-		if(frames !=  null)
+		if (frames != null)
 			frame = frames.frames[animation.frameIndex];
 		return rect;
 	}

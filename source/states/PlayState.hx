@@ -21,6 +21,8 @@ import objects.ui.HealthIcon;
 
 class PlayState extends FlxState
 {
+	public static var instance:PlayState;
+
 	public var actorLines:Array<ActorLine> = [];
 	public var enemyLine:ActorLine;
 	public var playerLine:ActorLine;
@@ -68,17 +70,18 @@ class PlayState extends FlxState
 	override public function create()
 	{
 		super.create();
+		instance = this;
 
 		camHUD = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
-		FlxG.camera.bgColor = FlxColor.GRAY;
+		FlxG.camera.bgColor = FlxColor.TRANSPARENT;
 		FlxG.cameras.add(camHUD, false);
 
 		hud = new FlxGroup();
 		hud.cameras = [camHUD];
 		add(hud);
 
-		song ??= Song.loadFromJson('hard', 'ice-roses');
+		song ??= Song.loadFromJson('hard', 'careless');
 		Conductor.reset();
 		Conductor.bpm = song.bpm;
 		Conductor.time = -Conductor.beatLength * 5;
@@ -109,7 +112,7 @@ class PlayState extends FlxState
 		enemyLine.characters.push(dad);
 
 		playerLine = addActorLine(FlxG.width * .75, 50);
-		//playerLine.autoPlay = false;
+		playerLine.autoPlay = false;
 		playerLine.characters.push(bf);
 
 		call('onStageCreatePost', [song.stage ?? 'stage']);
@@ -185,10 +188,9 @@ class PlayState extends FlxState
 
 					for (i in 0...holds)
 					{
-						var hold = targetActorline.makeHoldNote(noteTime + (steplength * i) + (steplength / 2), dir % 4, Conductor.stepLength, type,
-							i == holds - 1);
+						var hold = targetActorline.makeHoldNote(noteTime + (steplength * i) + (steplength / 4), dir % 4, steplength, type, i == holds - 1);
 						hold.parentNote = newNote;
-		
+
 						call('onNoteSustainCreate', [hold, targetActorline]);
 						call('onNoteCreate', [hold, targetActorline]);
 					}
@@ -372,10 +374,10 @@ class PlayState extends FlxState
 		}
 		if (startedSong)
 			Conductor.time = inst.time;
-
-		super.update(elapsed);
 		iconP1.lerp();
 		iconP2.lerp();
+
+		super.update(elapsed);
 
 		iconP1.setPosition(healthBar.center.x - 26, healthBar.center.y - (iconP1.frameHeight / 2 * iconP1.baseScale));
 		iconP2.setPosition(healthBar.center.x
@@ -384,6 +386,17 @@ class PlayState extends FlxState
 			healthBar.center.y
 			- (iconP2.frameHeight / 2 * iconP2.baseScale));
 		call('onUpdatePost', [elapsed]);
+
+		if (health <= healthBar.min || FlxG.keys.justPressed.R)
+		{
+		
+	
+			inst.pause();
+			voices.pause();
+			persistentDraw = false;
+			persistentUpdate = false;
+			openSubState(new GameoverState());
+		}
 	}
 
 	function startSong()

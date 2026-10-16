@@ -49,6 +49,10 @@ class Conductor
         beatLength = (60 / 100) * 1000;
         stepLength = beatLength / 4;
         measureLength = beatLength * 4;
+
+        onMeasure.removeAll();
+        onBeat.removeAll();
+        onStep.removeAll();
     }
 
 

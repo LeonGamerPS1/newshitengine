@@ -28,16 +28,16 @@ class Actor extends FlxSprite
 	{
 		if (texture == lastTexture)
 			return;
-		lastTexture = texture;
+		lastTexture = Note.currentSkin ?? texture;
 		final n = dirs[lane];
-		frames = Paths.getSparrowAtlas(texture);
+		frames = Paths.getSparrowAtlas(lastTexture);
 		animation.addByPrefix('grey', 'arrow' + n.toUpperCase(), 24, false);
 		animation.addByPrefix('press', n + ' press', 24, false);
 		animation.addByPrefix('confirm', n + ' confirm', 24, false);
 		playAnim('grey');
-		scale.setXY(.7);
+		scale.setXY(Note.currentNoteScale);
 		updateHitbox();
-		antialiasing = true;
+		antialiasing = Note.currentBlurring;
 	}
 
 	override function update(elapsed:Float)

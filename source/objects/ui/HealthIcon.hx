@@ -69,8 +69,8 @@ class HealthIcon extends FlxSprite
 
 	public function lerp()
 	{
-		scale.set(FlxMath.lerp(baseScale, scale.x, FlxMath.bound(1 - (FlxG.elapsed * 30), 0, 1)),
-			FlxMath.lerp(baseScale, scale.y, FlxMath.bound(1 - (FlxG.elapsed * 30), 0, 1)));
+		scale.set(FlxMath.lerp(baseScale, scale.x, FlxMath.bound(1 - (FlxG.elapsed * 10), 0, 1)),
+			FlxMath.lerp(baseScale, scale.y, FlxMath.bound(1 - (FlxG.elapsed * 10), 0, 1)));
 		updateHitbox();
 	}
 }

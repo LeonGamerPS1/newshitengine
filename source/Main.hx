@@ -1,17 +1,26 @@
 package;
 
 import backend.input.Controls;
-import debug.DebugTracker;
+import debug.FunkinDebugDisplay;
 import debug.MemoryUtil;
+import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.graphics.tile.FlxDrawBaseItem;
+import flixel.system.scaleModes.BaseScaleMode;
+import flixel.system.scaleModes.BaseScaleMode;
 import haxe.io.Path;
 import lime.app.Application;
 import openfl.display.Sprite;
-
+import openfl.geom.Matrix;
+import openfl.geom.Rectangle;
 #if linux @:cppInclude('../../../vendor/linux/include/gamemode_client.h') #end
 class Main extends Sprite
 {
+	/**
+	 * The debug display at the top left.
+	 */
+	public static var debugDisplay:FunkinDebugDisplay;
+
 	#if desktop
 	// stolen from psych engine lol
 	static function __init__()
@@ -46,7 +55,8 @@ class Main extends Sprite
 		#end
 
 		#if (windows && cpp)
-			cplusplus.windows.CPPWinBackend.makeDpiAware();
+		cplusplus.windows.CPPWinBackend.setDPIAware();
+		cplusplus.windows.CPPWinBackend.setWindowDarkMode(lime.app.Application.current.window.title, true);
 		#end
 
 		super();
@@ -56,123 +66,80 @@ class Main extends Sprite
 
 		Controls.init();
 
-		addChild(new FlxGame(0, 0, PlayState, 60, 60));
-		// Diese Variablen müssen außerhalb der Schleife/Funktion definiert werden (z. B. in deiner Klasse)
-		var lastTime:Float = haxe.Timer.stamp();
-		var frameCount:Int = 0;
-		var currentFps:Int = 0;
+		addChild(new FlxGame(0, 0, PlayState, 64,64));
 
-		// Die korrekte Zuweisung für deinen DebugTracker
-		var fps:DebugTracker = new DebugTracker(10, 10, 0xffffff);
-		fps.addSection('General', [
-			{
-				displayName: "FPS",
-				valueFunc: () ->
-				{
-					frameCount++;
-					var now = haxe.Timer.stamp();
-					if (now - lastTime >= 1.0)
-					{
-						currentFps = frameCount;
-						frameCount = 0;
-						lastTime = now;
-					}
-					return currentFps;
-				},
-			},
-			{
-				displayName: "RAM",
-				valueFunc: () ->
-				{
-					return FlxStringUtil.formatBytes(MemoryUtil.getMemory());
-				}
-			},
+		getChildAt(0).name = 'FlxGame';
 
-		]);
+		debugDisplay = new FunkinDebugDisplay(10, 10, 0xFFFFFF);
+		debugDisplay.name = 'FPSCounter';
+		addChild(debugDisplay);
 
-		fps.addSection('Flixel/Game', [
-			{
-				displayName: "Draw Calls:",
-				valueFunc: () ->
-				{
-					return FlxDrawBaseItem.drawCalls;
-				}
-			},
+		#if hxcpp_debug_server
+		trace('hxcpp_debug_server is enabled! You can now connect to the game with a debugger.');
+		#else
+		trace('hxcpp_debug_server is disabled! This build does not support debugging.');
+		#end
 
-			{
-				displayName: "Bitmaps Cached",
-				valueFunc: () ->
-				{
-					@:privateAccess
-					return Lambda.count(FlxG.bitmap._cache);
-				}
-			},
-			{
-				displayName: "Sounds active/Playing",
-				valueFunc: () ->
-				{
-					return FlxG.sound.list.length;
-				}
-			},
+		FlxG.scaleMode = new flixel.system.scaleModes.RatioScaleMode(true);
+		FlxG.signals.gameResized.add(onGameResized);
 
-			{
-				displayName: "Bitmaps Cached (Paths)",
-				valueFunc: () ->
-				{
-					return Lambda.count(Paths.cachedImages);
-				}
-			},
-			{
-				displayName: "Sounds Cached (Paths)",
-				valueFunc: () ->
-				{
-					return Lambda.count(Paths.cachedSounds);
-				}
-			},
-
-		]);
-
-		fps.addSection('Conductor', [
-
-			{
-				displayName: "Song Position (sec)",
-				valueFunc: () ->
-				{
-					return Conductor.time / 1000;
-				},
-			},
-
-			{
-				displayName: "Current BPM",
-				valueFunc: () ->
-				{
-					return Conductor.bpm;
-				}
-			},
-			{
-				displayName: "Current Step",
-				valueFunc: () ->
-				{
-					return Conductor.curStep;
-				}
-			},
-			{
-				displayName: "Current Beat",
-				valueFunc: () ->
-				{
-					return Conductor.curBeat;
-				}
-			},
-			{
-				displayName: "Current Section",
-				valueFunc: () ->
-				{
-					return Conductor.curSection;
-				}
-			}
-
-		]);
-
-		addChild(fps);
+		FlxG.scaleMode = new AspectRatioFillScale();
+		FlxG.signals.preStateSwitch.add(Conductor.reset);
 	}
+
+	function onGameResized(width:Int, height:Int)
+	{
+		if (FlxG.cameras != null)
+		{
+			for (cam in FlxG.cameras.list)
+			{
+				if (cam != null && (cam.filters != null && cam.filters.length > 0))
+					resetSpriteCache(cam.flashSprite);
+			}
+		}
+
+		if (FlxG.game != null)
+			resetSpriteCache(FlxG.game);
+	}
+
+	inline function resetSpriteCache(sprite:Sprite)
+	{
+		@:privateAccess
+		{
+			sprite.__cacheBitmap = null;
+			sprite.__cacheBitmapData = null;
+			sprite.__cacheBitmapData2 = null;
+			sprite.__cacheBitmapData3 = null;
+			sprite.__cacheBitmapColorTransform = null;
+		}
+	}
+}
+
+
+class AspectRatioFillScale extends BaseScaleMode 
+{
+    override function onMeasure(windowWidth:Int, windowHeight:Int):Void 
+    {
+        // 1. Berechne die Skalierungsfaktoren für beide Achsen
+        var scaleX:Float = windowWidth / FlxG.width;
+        var scaleY:Float = windowHeight / FlxG.height;
+        
+        // 2. Nutze den KLEINEREN Faktor, um Verzerrung zu verhindern
+        var finalScale:Float = (scaleX < scaleY) ? scaleX : scaleY;
+        
+        // 3. Setze die Spielgröße exakt auf die Fenstergröße (beseitigt die Balken)
+        gameSize.set(windowWidth, windowHeight);
+        
+        // 4. Skaliere das Spiel ohne Verzerrung
+        scale.set(finalScale, finalScale);
+        
+        // 5. Keine Offsets – das Spiel nutzt den vollen Canvas
+        offset.set(0, 0);
+        
+        // 6. Passe die Kamera-Größe an, damit sie Breite und Höhe komplett ausfüllt
+        if (FlxG.camera != null) {
+            FlxG.camera.width = Math.ceil(windowWidth / finalScale);
+            FlxG.camera.height = Math.ceil(windowHeight / finalScale);
+        }
+    }
 }
