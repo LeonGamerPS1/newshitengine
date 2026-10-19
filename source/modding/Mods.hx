@@ -56,6 +56,7 @@ class Mods
             meta.id = folder;
 			meta.enabled = data.enabled;
 			mods.push(meta);
+			trace('[ModLoader] REGISTERED MOD ${meta.name} ($folder)');
 		}
 	}
 

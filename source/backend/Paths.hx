@@ -41,6 +41,7 @@ class Paths
 		cachedAtlases.clear();
 
 		FlxG.bitmap.clearCache();
+		OpenFLAssets.cache.clear('assets/images');
 	}
 
 	public static function getPath(path:String)

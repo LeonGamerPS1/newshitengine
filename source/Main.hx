@@ -24,6 +24,11 @@ class Main extends Sprite
 
 		debugDisplay = new FunkinDebugDisplay(10, 10, 0xFFFFFF);
 		addChild(debugDisplay);
+
+		FlxG.signals.preUpdate.add(function(){
+			if(FlxG.keys.justPressed.F5)
+				FlxG.resetState();
+		});
 	}
 
 	#if (!debug)
