@@ -136,10 +136,10 @@ class Character extends FlxAnimate
 	public static function getJson(char:String):CharacterJSON
 	{
 		var path = Paths.getPath('data/characters/$char.json');
-		if (!OpenFLAssets.exists(path, TEXT))
+		if (!Paths.exists(path, TEXT))
 			path = Paths.getPath('data/characters/dad.json');
 
-		return cast Json.parse(OpenFLAssets.getText(path));
+		return cast Json.parse(Paths.getText(path));
 	}
 
 	public function playAnim(anim:String, ?force:Bool = true)

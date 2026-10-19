@@ -29,8 +29,8 @@ class GameoverState extends FlxSubState
 		prevFollow.put();
 		prevFollow = null;
 
-		snd = FlxG.sound.play(Paths.getSound(deathSnd));
-        trace(PlayState.instance.bf);
+		snd = FlxG.sound.play(Paths.getSound(deathSnd, true));
+
 		char = new Character(PlayState.instance.bf.x, PlayState.instance.bf.y, deathChar, true);
 		char.playAnim('firstDeath');
 		add(char);
@@ -51,7 +51,7 @@ class GameoverState extends FlxSubState
 		{
 			if (fart)
 				return;
-			snd = FlxG.sound.play(Paths.getSound(deathMus), 1, true);
+			snd = FlxG.sound.play(Paths.getSound(deathMus, true), 1, true);
 			char.playAnim('deathLoop');
 		});
 	}
@@ -66,9 +66,9 @@ class GameoverState extends FlxSubState
 		{
 			fart = true;
 			snd.stop();
-			snd = FlxG.sound.play(Paths.getSound(deathMusEnd));
+			snd = FlxG.sound.play(Paths.getSound(deathMusEnd, true));
 			char.playAnim('deathConfirm');
-			FlxG.camera.fade(FlxColor.BLACK, 2, false, function()
+			FlxG.camera.fade(FlxColor.BLACK, 4, false, function()
 			{
 				FlxG.switchState(new PlayState());
 			});

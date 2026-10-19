@@ -8,7 +8,7 @@ import modding.scripts.Hscript;
 
 class ScriptLoader
 {
-	public static function loadScript(path:String, NullNonexisting:Bool = false):BaseScript
+	public static function loadScript(path:String, NullNonexisting:Bool = true):BaseScript
 	{
 		var ext = Path.extension(path);
 		if (!Paths.exists(path))
@@ -32,7 +32,15 @@ class ScriptLoader
 	{
 		var scripts:Array<BaseScript> = [];
 		for (i in paths)
-			scripts.push(loadScript(i));
+		{
+			var s = loadScript(i);
+			if (s == null || s.dummy)
+			{
+				s = null;
+				continue;
+			}
+			scripts.push(s);
+		}
 
 		return scripts;
 	}

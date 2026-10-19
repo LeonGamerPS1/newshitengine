@@ -1,0 +1,98 @@
+package foxlite.loaders;
+
+import backend.Paths;
+import haxe.Json;
+import lime.utils.Assets;
+
+class FoxLoaderUtil {
+
+	public static var PathsClass:Dynamic = null;
+
+	/**
+		For Friday Night Funkin' Engines, this is a custom path function for custom library paths.
+
+		If `null`, the default assets folder will be used instead.
+	**/
+	public static function initPathClass(?Class:Dynamic) {
+		FoxLoaderUtil.PathsClass = Class;
+		#if foxlite_polymod
+		trace(PathsClass);
+		#end
+	}
+
+	// These are dynamic so you can change them at runtime
+
+	public static dynamic function jsonPath(name:String):String {
+		if(FoxLoaderUtil.PathsClass == null) return 'assets/data/$name.json';
+		return PathsClass.getPath('data/$name.json');
+	}
+
+	public static dynamic function filePath(name:String):String {
+		if(FoxLoaderUtil.PathsClass == null) return 'assets/$name';
+		return PathsClass.getPath('$name');
+	}
+
+	public static dynamic function imagePath(name:String):String {
+		if(FoxLoaderUtil.PathsClass == null) return 'assets/images/$name.png';
+		return PathsClass.getPath('images/$name.png');
+	}
+
+	public static dynamic function shaderVert(name:String):String {
+		if(FoxLoaderUtil.PathsClass == null) return 'assets/shaders/$name.vert';
+		return PathsClass.getPath('shaders/$name.vert');
+	}
+
+	public static dynamic function shaderFrag(name:String):String {
+		if(FoxLoaderUtil.PathsClass == null) return 'assets/shaders/$name.frag';
+		return PathsClass.getPath('shaders/$name.frag');
+	}
+
+	public static dynamic function shaderIncludeRoot(name:String):String {
+		return 'shaders/$name';
+	}
+
+	public static dynamic function loadJSON(name:String):Dynamic {
+		var path = filePath(name);
+		if(!Assets.exists(path)) return null;
+		return Json.parse(Assets.getText(path));
+	}
+
+	public static dynamic function loadText(name:String):String {
+		var path = name;
+		if(!Paths.exists(path)) return null;
+		return Paths.getText(path);
+	}
+	
+	/**
+		Iterates a String for each line separated by `sep`
+
+		@param s The input String
+		@param cb The callback function that will be executed for each chunk
+		@param sep Custom line separator, default is "\n"
+	**/
+	public static dynamic function forEachLine(s:String, cb:(chunk:String) -> Void, sep:String="\n") {
+		var pos = 0;
+		var len = -1;
+		while(true) {
+			len = s.indexOf(sep, pos);
+			cb(s.substr(pos, len > -1 ? len-pos : null));
+			pos = len+1;
+			if(len == -1) break;
+		}
+	}
+
+	/**
+		Like `forEachLine()`, but the callback can return a `true` to stop execution.
+		A `false` must be returned otherwise.
+	**/
+	public static dynamic function forEachLineControl(s:String, cb:(chunk:String) -> Bool, sep:String="\n") {
+		var pos = 0;
+		var len = -1;
+		while(true) {
+			len = s.indexOf(sep, pos);
+			if(cb(s.substr(pos, len > -1 ? len-pos : null))) break;
+			pos = len+1;
+			if(len == -1) break;
+		}
+	}
+}

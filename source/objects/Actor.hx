@@ -12,7 +12,8 @@ class Actor extends FlxSprite
 
 	public static var Width:Float = 160 * 0.7;
 
-	public var noteShader:RGB;
+	public var shaderNote:RGB = new RGB();
+
 	public var holding:Bool = false;
 
 	public var flipScroll:Bool = false;
@@ -22,6 +23,11 @@ class Actor extends FlxSprite
 		super();
 		this.lane = lane;
 		loadTexture(texture);
+
+		shader = shaderNote;
+
+		var arr = Note.arrowRGB[lane];
+		shaderNote.setArray(arr);
 	}
 
 	public function loadTexture(texture:String = 'NOTE_assets')
@@ -61,6 +67,9 @@ class Actor extends FlxSprite
 		{
 			centerOffsets();
 			centerOrigin();
+		}
+		if(shaderNote != null) {
+			shader = anim != 'grey' ? shaderNote : null;
 		}
 	}
 }

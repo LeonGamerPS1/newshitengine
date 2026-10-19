@@ -2,6 +2,7 @@ package states;
 
 import backend.ScriptLoader;
 import backend.Song;
+import backend.util.MathUtil.Vector3;
 import flixel.addons.display.FlxGridOverlay;
 import flixel.math.FlxPoint;
 import foxlite.FoxScene;
@@ -35,6 +36,7 @@ class PlayState extends FlxState
 	public var startedCountdown = false;
 	public var startedSong = false;
 
+	public var camUnderlay:FlxCamera;
 	public var camHUD:FlxCamera;
 	public var hud:FlxGroup;
 	public var defaultCamZoom:Float = 1;
@@ -74,14 +76,20 @@ class PlayState extends FlxState
 
 		camHUD = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
+
+		camUnderlay = new FlxCamera();
+		camUnderlay.bgColor.alpha = 0;
+
 		FlxG.camera.bgColor = FlxColor.TRANSPARENT;
+
+		FlxG.cameras.add(camUnderlay, false);
 		FlxG.cameras.add(camHUD, false);
 
 		hud = new FlxGroup();
 		hud.cameras = [camHUD];
 		add(hud);
 
-		song ??= Song.loadFromJson('hard', 'careless');
+		song ??= Song.loadFromJson('hard', 'endless-redux');
 		Conductor.reset();
 		Conductor.bpm = song.bpm;
 		Conductor.time = -Conductor.beatLength * 5;
@@ -121,6 +129,10 @@ class PlayState extends FlxState
 		{
 			sL.hitSignal.add(hitNote);
 			sL.missSignal.add(miss);
+			sL.noteMissSignal.add((n) ->
+			{
+				call('onNoteMiss', [n]);
+			});
 		}
 
 		healthBar = new HealthBar();
@@ -149,6 +161,7 @@ class PlayState extends FlxState
 
 		Conductor.addTimeChangeAt(0, currentBPM);
 
+		var noteTypesloaded = [''];
 		for (section in song.notes)
 		{
 			if (section.changeBPM && section.bpm != currentBPM)
@@ -172,7 +185,13 @@ class PlayState extends FlxState
 				var noteTime:Float = note[0];
 				var dir:Int = note[1];
 				var length:Float = (note[2] is String) ? 0.0 : note[2];
-				var type = Std.string(note[3]);
+				var type = Std.string(note[3] ?? '');
+
+				if (!noteTypesloaded.contains(type))
+				{
+					loadScript('data/notetypes/$type.hx');
+					noteTypesloaded.push(type);
+				}
 
 				var isPlayer = section.mustHitSection;
 				if (dir > 3)
@@ -180,6 +199,7 @@ class PlayState extends FlxState
 
 				var targetActorline:ActorLine = isPlayer ? playerLine : enemyLine;
 				var newNote = targetActorline.makeNote(noteTime, dir % 4, length, type);
+				newNote.seglength = steplength;
 				call('onNoteCreate', [newNote, targetActorline]);
 
 				if (length > 0)
@@ -188,7 +208,7 @@ class PlayState extends FlxState
 
 					for (i in 0...holds)
 					{
-						var hold = targetActorline.makeHoldNote(noteTime + (steplength * i) + (steplength / 4), dir % 4, steplength, type, i == holds - 1);
+						var hold = targetActorline.makeHoldNote(noteTime + (steplength * i) + (steplength / 2), dir % 4, steplength, type, i == holds - 1);
 						hold.parentNote = newNote;
 
 						call('onNoteSustainCreate', [hold, targetActorline]);
@@ -219,7 +239,10 @@ class PlayState extends FlxState
 
 	function loadScript(s:String)
 	{
-		scripts.push(ScriptLoader.loadScript(s));
+		var s = ScriptLoader.loadScript(s);
+		if (s == null || s.dummy)
+			return;
+		scripts.push(s);
 	}
 
 	function loadScripts(s:Array<String>)
@@ -360,6 +383,8 @@ class PlayState extends FlxState
 		{
 			healthBar.value = health;
 			health = healthBar.value;
+			updateIcon(iconP1, healthBar.percent, true);
+			updateIcon(iconP2, healthBar.percent);
 		}
 
 		final accuracye = FlxMath.roundDecimal(accuracy, 2);
@@ -389,8 +414,6 @@ class PlayState extends FlxState
 
 		if (health <= healthBar.min || FlxG.keys.justPressed.R)
 		{
-		
-	
 			inst.pause();
 			voices.pause();
 			persistentDraw = false;
@@ -455,26 +478,53 @@ class PlayState extends FlxState
 		if (!note.actorline.autoPlay)
 		{
 			health += 0.023;
-			var timing:Float = Math.abs(Conductor.time - note.time);
+
 			if (!note.isTrail)
 			{
+				var timing:Float = Math.abs(Conductor.time - note.time);
 				var quantizedTiming:Float = Math.floor(timing * 5) / 5;
 				var ratio:Float = 1 - (quantizedTiming / Conductor.sfz);
 
 				score += Math.floor(350 * ratio);
+				accuracy = ((earnedAccuracyPoints += (timing <= 45 ? 100 : timing <= 90 ? 75 : timing <= 135 ? 40 : 20)) / (maxAccuracyPoints += 100)) * 100;
 			}
-			accuracy = ((earnedAccuracyPoints += (timing <= 45 ? 100 : timing <= 90 ? 75 : timing <= 135 ? 40 : 20)) / (maxAccuracyPoints += 100)) * 100;
 		}
 		call('hitNote', [note, note.actorline.autoPlay]);
 	}
 
-	public function miss(dir:Int)
+	public function miss(dir:Int, isSustain:Bool = false)
 	{
 		misses++;
 		health -= 0.05;
 		call('missDirection', [dir]);
 
-		accuracy = (earnedAccuracyPoints / (maxAccuracyPoints += 100)) * 100;
+		if (!isSustain)
+			accuracy = (earnedAccuracyPoints / (maxAccuracyPoints += 100)) * 100;
 		score -= 350;
+	}
+
+	public static function updateIcon(healthI:HealthIcon, perc:Float = 0, player:Bool = false)
+	{
+		var hframes = healthI.animation.numFrames;
+		if (hframes == 0 || hframes == 1 || healthI.animation.curAnim == null) // missing animation or really just one frame
+			return;
+		if (player)
+		{
+			if (perc <= 0.2)
+				healthI.animation.curAnim.curFrame = 1;
+			else if (perc >= 0.8 && hframes > 2)
+				healthI.animation.curAnim.curFrame = 2;
+			else
+				healthI.animation.curAnim.curFrame = 0;
+		}
+		else
+		{
+			if (perc >= 0.8)
+				healthI.animation.curAnim.curFrame = 1;
+			else if (perc <= 0.2 && hframes > 2)
+				healthI.animation.curAnim.curFrame = 2;
+			else
+				healthI.animation.curAnim.curFrame = 0;
+		}
 	}
 }

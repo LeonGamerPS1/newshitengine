@@ -47,7 +47,7 @@ class Song
 
 	public static function loadFromJson(jsonInput:String, ?folder:String):SwagSong
 	{
-		var rawJson = OpenFLAssets.getText(Paths.getPath('songs/$folder/$jsonInput.json')).trim();
+		var rawJson = Paths.getText(Paths.getPath('songs/$folder/$jsonInput.json')).trim();
 
 		return parseJSONshit(rawJson, folder);
 	}

@@ -5,8 +5,15 @@ import animate.FlxAnimateFrames;
 import flixel.graphics.frames.FlxFramesCollection;
 import flixel.math.FlxMatrix;
 import haxe.MainLoop;
+import haxe.io.Path;
+import lime.media.AudioBuffer;
+import lime.media.vorbis.VorbisFile;
+import modding.Mods;
+import openfl.display.BitmapData;
 import openfl.media.Sound;
 import openfl.utils.AssetType;
+import sys.FileSystem;
+import sys.io.File;
 
 class Paths
 {
@@ -36,8 +43,19 @@ class Paths
 		FlxG.bitmap.clearCache();
 	}
 
-	public static inline function getPath(path:String)
+	public static function getPath(path:String)
+	{
+		if (path.startsWith('assets'))
+			path = path.replace('assets/', '');
+		for (mod in Mods.getActiveMods())
+		{
+			var path = Path.join([Mods.MOD_ROOT, mod.id, path]);
+
+			if (FileSystem.exists(path))
+				return path;
+		}
 		return 'assets/$path';
+	}
 
 	static public var defaultMatrix:FlxMatrix = new FlxMatrix();
 
@@ -47,13 +65,13 @@ class Paths
 		if (cachedImages.exists(path))
 			return cachedImages.get(path);
 
-		if (!OpenFLAssets.exists(path))
+		if (!FileSystem.exists(path))
 		{
 			FlxG.log.warn('oh noes! image not here $path');
 			return null;
 		}
 
-		var bitmap = OpenFLAssets.getBitmapData(path);
+		var bitmap = BitmapData.fromFile(path);
 
 		bitmap.disposeImage();
 
@@ -90,21 +108,20 @@ class Paths
 		if (cachedSounds.exists(path))
 			return cachedSounds.get(path);
 
-		if (!OpenFLAssets.exists(path, SOUND))
+		if (!FileSystem.exists(path))
 			return null;
 
-		var sound:Sound = #if FLX_STREAM_SOUND stream ? FlxG.assets.streamSound(path) : #end
-		FlxG.assets.getSound(path, false);
+		var sound:Sound = stream ? streamed(path) : Sound.fromFile(path);
 		cachedSounds.set(path, sound);
 		return sound;
 	}
 
 	public static function exists(s:String, ?type:AssetType)
 	{
-		if(OpenFLAssets.exists(s, type))
+		if (FileSystem.exists(s))
 			return true;
 		var path = getPath(s);
-		return OpenFLAssets.exists(path, type);
+		return FileSystem.exists(path);
 	}
 
 	public static function getFont(path:String, fontType:FontExtension = TTF):String
@@ -124,13 +141,13 @@ class Paths
 			return cast cachedAtlases.get(pathXML);
 		else if (cachedAtlases.exists(pathPng))
 			return cast cachedAtlases.get(pathXML);
-		if (!OpenFLAssets.exists(pathPng) || !OpenFLAssets.exists(pathXML))
+		if (!FileSystem.exists(pathPng) || !FileSystem.exists(pathXML))
 		{
 			FlxG.log.warn('oh noes!!! atlas not here!!! $pathPng | $pathXML');
 			return null;
 		}
 
-		var atlas = FlxAtlasFrames.fromSparrow(getGraphic(path), pathXML);
+		var atlas = FlxAtlasFrames.fromSparrow(getGraphic(path), getText(pathXML));
 		atlas.parent.persist = true;
 		cachedAtlases.set(pathXML, atlas);
 		cachedAtlases.set(pathPng, atlas);
@@ -139,13 +156,17 @@ class Paths
 
 	public static function getMultiSparrowAtlas(paths:Array<String>):FlxAtlasFrames
 	{
+		if (paths.length == 1)
+			return getSparrowAtlas(paths[0]);
 		if (cachedAtlases.exists(paths.toString()))
 			return cast cachedAtlases.get(paths.toString());
 
 		var megaAtlas = new FlxAtlasFrames(null);
 		for (goreSee in paths)
 		{
-			megaAtlas.addAtlas(getSparrowAtlas(goreSee));
+			var atlas = getSparrowAtlas(goreSee);
+			if (atlas != null)
+				megaAtlas.addAtlas(atlas);
 		}
 		cachedAtlases.set(paths.toString(), megaAtlas);
 
@@ -159,7 +180,7 @@ class Paths
 
 		if (cachedAtlases.exists(animJSON))
 			return cast cachedAtlases.get(animJSON);
-		if (!OpenFLAssets.exists(animJSON))
+		if (!FileSystem.exists(animJSON))
 		{
 			FlxG.log.warn('oh noes!!! atlas not here!!! $path');
 			return null;
@@ -169,6 +190,7 @@ class Paths
 		atlas.parent?.bitmap.disposeImage();
 		cachedAtlases.set(animJSON, atlas);
 		atlas.parent.persist = true;
+
 		return atlas;
 	}
 
@@ -188,6 +210,22 @@ class Paths
 		final list:Array<String> = lib.list(type);
 		path = 'assets/$path';
 		var stringList:Array<String> = [];
+		for (mod in Mods.getActiveMods())
+		{
+			var basePath = Mods.MOD_ROOT + '/' + mod.id + '/' + path.replace('assets/', '');
+			trace('scanning in mods for path $basePath');
+			if (!FileSystem.exists(basePath))
+				continue;
+
+			for (file in FileSystem.readDirectory(basePath))
+			{
+				var pathToAdd = removePath ? file : '$basePath/$file';
+				trace(pathToAdd);
+				if (!pathToAdd.endsWith(suffix))
+					continue;
+				stringList.push(pathToAdd);
+			}
+		}
 		for (hmm in list)
 		{
 			if (!hmm.startsWith(path) || !hmm.endsWith(suffix))
@@ -209,6 +247,27 @@ class Paths
 		return path;
 	}
 
+	public static function streamed(id:String, useCache:Bool = true):Sound
+	{
+		#if (lime_vorbis && lime > "7.9.0")
+		var path = id;
+		var vorbisFile = VorbisFile.fromFile(path);
+		if (vorbisFile != null)
+		{
+			var buffer = AudioBuffer.fromVorbisFile(vorbisFile);
+			return Sound.fromAudioBuffer(buffer);
+		}
+		else
+		{
+			// TODO: Streaming sound
+			return Sound.fromFile(id);
+		}
+		#else
+		// TODO: Streaming sound
+		return Sound.fromFile(id);
+		#end
+	}
+
 	public static function vertShader(shaderName:String)
 	{
 		var path = getPath('shaders/$shaderName.vert');
@@ -218,20 +277,20 @@ class Paths
 	public static function GetVertShader(shaderName:String):String
 	{
 		var path = vertShader(shaderName);
-		return FlxG.assets.getText(path, false);
+		return getText(path);
 	}
 
 	public static function GetFragShader(shaderName:String):String
 	{
 		var path = fragShader(shaderName);
-		return FlxG.assets.getText(path, false);
+		return getText(path);
 	}
 
 	public static function getText(path:String)
 	{
-		if(OpenFLAssets.exists(path))
-			return OpenFLAssets.getText(path);
-		return OpenFLAssets.getText(getPath(path));
+		if (FileSystem.exists(path))
+			return File.getContent(path);
+		return File.getContent(getPath(path));
 	}
 }
 

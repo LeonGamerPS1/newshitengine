@@ -38,15 +38,16 @@
 	<source path="source" />
 	<assets path="assets" />
 
+
 	<!-- _______________________________ Libraries ______________________________ -->
 
 	<haxelib name="flixel" />
 	<haxelib name="flixel-animate" />
 	<haxelib name="foxlite" />
-	<haxelib name="hscript-insanity" unless="html5"/>
+	<haxelib name="hscript-insanity" unless="html5" />
 
 
-
+	<assets path="mods" />
 	<!--In
 	case you want to use the addons package-->
 	<haxelib name="flixel-addons" />
@@ -66,6 +67,8 @@
 	<!--Remove
 	the legacy health system-->
 	<haxedef name="FLX_NO_HEALTH" />
+
+	<haxedef name="FLX_NO_BUILD_SCRIPTS" />
 
 	<!--Enable
 	the Flixel core recording system-->
@@ -122,7 +125,23 @@
 	<!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
 	<!-- pretty (haxeflixel default), indent, classic (haxe compiler default) -->
 	<haxedef name="message.reporting" value="pretty" />
+	<haxeflag name="--macro include('foxlite')" />
 
+
+	<!--Used
+	for Izzy Engine's crash handler-->
+	<haxedef name="HXCPP_CHECK_POINTER" />
+	<haxedef name="HXCPP_STACK_LINE"  />
+	<haxedef name="HXCPP_STACK_TRACE"  />
+
+	<define name="CRASH_HANDLER"/>
+
+
+	<!--Disable
+	deprecated warnings-->
+	<haxedef name='no-deprecation-warnings' />
+
+	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN" />
 	<!-- _________________________________ Custom _______________________________ -->
 
 	<!--Place

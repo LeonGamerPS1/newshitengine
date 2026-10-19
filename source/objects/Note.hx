@@ -5,6 +5,7 @@ import shaders.RGB;
 
 class Note extends FlxSprite
 {
+	public static var swagWidth:Float = Actor.Width;
 	public var actorline:ActorLine;
 
 	public var time:Float = 0;
@@ -53,6 +54,8 @@ class Note extends FlxSprite
 	public var offsetX:Float = 0;
 	public var offsetY:Float = 0;
 
+	public var shaderNote:RGB = new RGB();
+
 	public function new(time:Float = 0, data:Int = 0, isT:Bool = false, isEn:Bool = false, t:String = 'NOTE_assets')
 	{
 		super();
@@ -61,7 +64,11 @@ class Note extends FlxSprite
 		lane = data;
 		isTrail = isT;
 		isTail = isEn;
+		shader = shaderNote;
 
+		var arr = arrowRGB[data];
+		shaderNote.setArray(arr);
+		
 		loadTexture(t);
 	}
 
@@ -69,6 +76,7 @@ class Note extends FlxSprite
 	{
 		if (texture == lastTexture)
 			return;
+	
 		lastTexture = currentSkin ?? texture;
 		final n = dirs[lane];
 		frames = Paths.getSparrowAtlas(lastTexture);
@@ -81,7 +89,7 @@ class Note extends FlxSprite
 
 		if (isTrail)
 		{
-			mA = .7;
+			mA = .6;
 			alpha = mA;
 			earlyHitMult = 0;
 			playAnim(!isTail ? 'segment' : 'tail');
@@ -104,7 +112,7 @@ class Note extends FlxSprite
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		if (actorline != null && actorline.autoPlay)
+		if (!ignoreNote && actorline != null && actorline.autoPlay)
 		{
 			if (!hit && time <= Conductor.time)
 				hit = true;

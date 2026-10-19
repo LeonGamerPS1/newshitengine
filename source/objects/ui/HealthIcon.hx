@@ -31,7 +31,7 @@ class HealthIcon extends FlxSprite
 
 	public function changeIcon(char:String)
 	{
-		if (!OpenFLAssets.exists(Paths.getPath('images/icons/icon-' + char + '.png')))
+		if (!Paths.exists(Paths.getPath('images/icons/icon-' + char + '.png')))
 			char = 'face';
 
 		var graphic = Paths.getGraphic('icons/icon-' + char);
@@ -63,14 +63,15 @@ class HealthIcon extends FlxSprite
 
 	public function bump()
 	{
-		scale.setXY(baseScale * 1.2);
+		scale.setXY(baseScale * 1.4);
 		updateHitbox();
 	}
 
 	public function lerp()
 	{
-		scale.set(FlxMath.lerp(baseScale, scale.x, FlxMath.bound(1 - (FlxG.elapsed * 10), 0, 1)),
-			FlxMath.lerp(baseScale, scale.y, FlxMath.bound(1 - (FlxG.elapsed * 10), 0, 1)));
+		scale.set(FlxMath.lerp(baseScale, scale.x, FlxMath.bound(1 - (FlxG.elapsed * 5), 0, 1)),
+			FlxMath.lerp(baseScale, scale.y, FlxMath.bound(1 - (FlxG.elapsed * 5), 0, 1)));
+		angle = FlxMath.lerp(0,angle, FlxMath.bound(1 - (FlxG.elapsed * 10), 0, 1));
 		updateHitbox();
 	}
 }

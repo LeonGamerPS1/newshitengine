@@ -1,6 +1,7 @@
 #if !macro
 import backend.Conductor;
 import backend.Paths;
+import backend.Util;
 import backend.input.Controls.*;
 import flixel.*;
 import flixel.addons.transition.FlxTransitionableState;

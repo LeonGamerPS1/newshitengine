@@ -4,20 +4,17 @@ class BaseScript
 {
 	public var path:String;
 	public var name:String;
+	public var dummy:Bool = true;
 
 	public function new(path:String)
 	{
 		this.path = path;
 		this.name = haxe.io.Path.withoutExtension(haxe.io.Path.withoutDirectory(path));
 
-		trace('$name | $path');
 		load(path);
 	}
 
-	function load(path:String)
-	{
-		
-	}
+	function load(path:String) {}
 
 	public function getVariable(name:String):Dynamic
 	{
@@ -34,5 +31,5 @@ class BaseScript
 		return null;
 	}
 
-    public function setDefaultVars() {}
+	public function setDefaultVars() {}
 }

@@ -28,9 +28,9 @@ void main() {
 		green.value = [0, 1, 0];
 		blue.value = [0, 0, 1];
 
-        this.r = r;
-        this.g = g;
-        this.b = b;
+		this.r = r;
+		this.g = g;
+		this.b = b;
 	}
 
 	public var r(default, set):FlxColor;
@@ -53,19 +53,39 @@ void main() {
 
 	function set_r(value:FlxColor):FlxColor
 	{
+		if (value == r)
+			return value;
 		red.value = [value.redFloat, value.greenFloat, value.blueFloat];
 		return r = value;
 	}
 
 	function set_g(value:FlxColor):FlxColor
 	{
+		if (value == g)
+			return value;
 		green.value = [value.redFloat, value.greenFloat, value.blueFloat];
 		return g = value;
 	}
 
 	function set_b(value:FlxColor):FlxColor
 	{
+		if (value == b)
+			return value;
 		blue.value = [value.redFloat, value.greenFloat, value.blueFloat];
 		return b = value;
+	}
+
+	public function set(r:FlxColor, g:FlxColor, b:FlxColor)
+	{
+		this.r = r;
+		this.g = g;
+		this.b = b;
+	}
+
+	public function setArray(arr:Array<FlxColor>)
+	{
+		this.r = arr[0];
+		this.g = arr[1];
+		this.b = arr[2];
 	}
 }

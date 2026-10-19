@@ -1,256 +1,597 @@
 package backend.util;
-
-
-/**
- * Utilities for performing mathematical operations.
- */
-@:nullSafety
+import flixel.util.FlxPool;
+@:nullSafety(Strict)
 class MathUtil
 {
-  /**
-   * Euler's constant and the base of the natural logarithm.
-   * Math.E is not a constant in Haxe, so we'll just define it ourselves.
-   */
-  public static final E:Float = 2.71828182845904523536;
+	/**
+	 * Get the logarithm of a value with a given base.
+	 * @param base The base of the logarithm.
+	 * @param value The value to get the logarithm of.
+	 * @return `log_base(value)`
+	 */
+	public static function logBase(base:Float, value:Float):Float
+	{
+		return Math.log(value) / Math.log(base);
+	}
 
-  /**
-   * Get the logarithm of a value with a given base.
-   * @param base The base of the logarithm.
-   * @param value The value to get the logarithm of.
-   * @return `log_base(value)`
-   */
-  public static function logBase(base:Float, value:Float):Float
-  {
-    return Math.log(value) / Math.log(base);
-  }
+	/**
+	 * Remaps a value from a range to a new range
+	 * 
+	 * Akin to `FlxMath.remapToRange`
+	 * @param x Input value
+	 * @param l1 Low bound of range 1
+	 * @param h1 High bound of range 1
+	 * @param l2 Low bound of range 2
+	 * @param h2 High bound of range 2
+	 * @return Input value remapped to range 2
+	 */
+	inline public static function scale(x:Float, l1:Float, h1:Float, l2:Float, h2:Float):Float
+		return ((x - l1) * (h2 - l2) / (h1 - l1) + l2);
 
-  public static function easeInOutCirc(x:Float):Float
-  {
-    if (x <= 0.0) return 0.0;
-    if (x >= 1.0) return 1.0;
-    var result:Float = (x < 0.5) ? (1 - Math.sqrt(1 - 4 * x * x)) / 2 : (Math.sqrt(1 - 4 * (1 - x) * (1 - x)) + 1) / 2;
-    return Math.isNaN(result) ? 1.0 : result;
-  }
+	/**
+	 * Clamps/Bounds a value between a range that it cannot go below or over
+	 * 
+	 * Akin to `FlxMath.bound`
+	 * @param n Input value
+	 * @param l Low boundary
+	 * @param h High Boundary
+	 * @return Clamped value
+	 */
+	inline public static function clamp(n:Float, l:Float, h:Float)
+	{
+		if (n > h)
+			n = h;
+		if (n < l)
+			n = l;
+		return n;
+	}
 
-  public static function easeInOutBack(x:Float, c:Float = 1.70158):Float
-  {
-    if (x <= 0.0) return 0.0;
-    if (x >= 1.0) return 1.0;
-    var result:Float = (x < 0.5) ? (2 * x * x * ((c + 1) * 2 * x - c)) / 2 : (1 - 2 * (1 - x) * (1 - x) * ((c + 1) * 2 * (1 - x) - c)) / 2;
-    return Math.isNaN(result) ? 1.0 : result;
-  }
+	/**
+	 * Creates or uses a provided point and rotates it around a given `x` and `y` by radians
+	 * 
+	 * Akin to `new FlxPoint(x,y).radians += angle`
+	 * @return A rotated FlxPoint
+	 */
+	public static function rotate(x:Float, y:Float, angle:Float, ?point:FlxPoint):FlxPoint
+	{
+		final p = point ?? FlxPoint.weak();
+		p.set((x * Math.cos(angle)) - (y * Math.sin(angle)), (x * Math.sin(angle)) + (y * Math.cos(angle)));
+		return p;
+	}
 
-  public static function easeInBack(x:Float, c:Float = 1.70158):Float
-  {
-    if (x <= 0.0) return 0.0;
-    if (x >= 1.0) return 1.0;
-    return (1 + c) * x * x * x - c * x * x;
-  }
+	public static inline function quantizeAlpha(f:Float, interval:Float)
+	{
+		return Std.int((f + interval / 2) / interval) * interval;
+	}
 
-  public static function easeOutBack(x:Float, c:Float = 1.70158):Float
-  {
-    if (x <= 0.0) return 0.0;
-    if (x >= 1.0) return 1.0;
-    return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2);
-  }
+	public static inline function quantize(f:Float, interval:Float)
+	{
+		return Std.int((f + interval / 2) / interval) * interval;
+	}
 
-  /**
-   * Get the base-2 exponent of a value.
-   * @param x value
-   * @return `2^x`
-   */
-  public static function exp2(x:Float):Float
-  {
-    return Math.pow(2, x);
-  }
+	/**
+		FlxMath.lerp but accounts for FPS.
+	**/
+	public static inline function fpsLerp(v1:Float, v2:Float, ratio:Float)
+		return FlxMath.lerp(v1, v2, FlxMath.getElapsedLerp(ratio, FlxG.elapsed));
 
-  /**
-   * Performs a modulo operation to calculate the remainder of `a` divided by `b`.
-   *
-   * The definition of "remainder" varies by implementation;
-   * this one is similar to GLSL or Python in that it uses Euclidean division, which always returns positive,
-   * while Haxe's `%` operator uses signed truncated division.
-   *
-   * For example, `-5 % 3` returns `-2` while `FlxMath.mod(-5, 3)` returns `1`.
-   *
-   * @param a The dividend.
-   * @param b The divisor.
-   * @return `a mod b`.
-   */
-  public static function mod(a:Float, b:Float):Float
-  {
-    b = Math.abs(b);
-    return a - b * Math.floor(a / b);
-  }
+	/**
+	 * referenced via https://youtu.be/LSNQuFEDOyQ
+	 * 
+	 * A frame independent lerp. Primary purpose is for the camera
+	 * 
+	 * your decay should be around 1 - 25
+	 */
+	public static function decayLerp(a:Float, b:Float, decay:Float, elapsed:Float)
+		return b + (a - b) * Math.exp(-decay * elapsed);
 
-  /**
-   * Helper function to get the fractional part of a value.
-   * @param x value
-   * @return `x mod 1`.
-   */
-  public static function fract(x:Float):Float
-  {
-    return x - Math.floor(x);
-  }
+	/**
+		Similar to FlxMath.wrap, but also supports floats.
 
-  /**
-   * Linear interpolation.
-   *
-   * @param base The starting value, when `alpha = 0`.
-   * @param target The ending value, when `alpha = 1`.
-   * @param alpha The percentage of the interpolation from `base` to `target`. Forms a "line" intersecting the two.
-   *
-   * @return The interpolated value.
-   */
-  public static function lerp(base:Float, target:Float, alpha:Float):Float
-  {
-    if (alpha == 0) return base;
-    if (alpha == 1) return target;
-    return base + alpha * (target - base);
-  }
+		@param n Number to wrap.
+		@param min Minimum number (inclusive).
+		@param max Maximum number (up to but excluding max + 1).
+		@result Result of wrap.
+	**/
+	public static inline function wrap(n:Float, min:Float, max:Float):Float
+		return (euclideanMod(n - min, max - min + 1) + min);
 
-  /**
-   * Exponential decay interpolation.
-   *
-   * Framerate-independent because the rate-of-change is proportional to the difference, so you can
-   * use the time elapsed since the last frame as `deltaTime` and the function will be consistent.
-   *
-   * Equivalent to `smoothLerpPrecision(base, target, deltaTime, halfLife, 0.5)`.
-   *
-   * @param base The starting or current value.
-   * @param target The value this function approaches.
-   * @param deltaTime The change in time along the function in seconds.
-   * @param halfLife Time in seconds to reach halfway to `target`.
-   *
-   * @see https://twitter.com/FreyaHolmer/status/1757918211679650262
-   *
-   * @return The interpolated value.
-   */
-  public static function smoothLerpDecay(base:Float, target:Float, deltaTime:Float, halfLife:Float):Float
-  {
-    if (deltaTime == 0) return base;
-    if (base == target) return target;
-    return lerp(target, base, exp2(-deltaTime / halfLife));
-  }
+	/**
+		https://en.wikipedia.org/wiki/Modulo
 
-  /**
-   * Exponential decay interpolation.
-   *
-   * Framerate-independent because the rate-of-change is proportional to the difference, so you can
-   * use the time elapsed since the last frame as `deltaTime` and the function will be consistent.
-   *
-   * Equivalent to `smoothLerpDecay(base, target, deltaTime, -duration / logBase(2, precision))`.
-   *
-   * @param base The starting or current value.
-   * @param target The value this function approaches.
-   * @param deltaTime The change in time along the function in seconds.
-   * @param duration Time in seconds to reach `target` within `precision`, relative to the original distance.
-   * @param precision Relative target precision of the interpolation. Defaults to 1% distance remaining.
-   *
-   * @see https://twitter.com/FreyaHolmer/status/1757918211679650262
-   *
-   * @return The interpolated value.
-   */
-  public static function smoothLerpPrecision(base:Float, target:Float, deltaTime:Float, duration:Float, precision:Float = 1 / 100):Float
-  {
-    if (deltaTime == 0) return base;
-    if (base == target) return target;
-    return lerp(target, base, Math.pow(precision, deltaTime / duration));
-  }
+		Simulates modulo with euclidean division.
+		(Unlike Haxe's modulo operator, which uses truncated division, the result will never be negative)
 
-  /**
-   * Snap a value to another if it's within a certain distance (inclusive).
-   *
-   * Helpful when using functions like `smoothLerpPrecision` to ensure the value actually reaches the target.
-   *
-   * @param base The base value to conditionally snap.
-   * @param target The target value to snap to.
-   * @param threshold Maximum distance between the two for snapping to occur.
-   *
-   * @return `target` if `base` is within `threshold` of it, otherwise `base`.
-   */
-  public static function snap(base:Float, target:Float, threshold:Float):Float
-  {
-    return Math.abs(base - target) <= threshold ? target : base;
-  }
+		@param n Dividend of the operation.
+		@param div Divisor of the operator.
+		@result Result of euclidean division.
+	**/
+	public static inline function euclideanMod(n:Float, div:Float):Float
+	{
+		var mod:Float = (n % div);
+		return (mod < 0 ? mod + Math.abs(div) : mod);
+	}
 
-  /**
-   * Perform linear interpolation between the base and the target, based on the current framerate.
-   * @param base The starting value, when `progress <= 0`.
-   * @param target The ending value, when `progress >= 1`.
-   * @param ratio Value used to interpolate between `base` and `target`.
-   *
-   * @return The interpolated value.
-   */
-  @:deprecated('Use smoothLerpPrecision instead')
-  public static function coolLerp(base:Float, target:Float, ratio:Float):Float
-  {
-    return base + cameraLerp(ratio) * (target - base);
-  }
+	/**
+	 * Alternative to `FlxMath.roundDecimal` but floors the value rather than rounding it
+	 * @param value The number 
+	 * @param precision The number of decimals
+	 * @return The floored value
+	 */
+	public static function floorDecimal(value:Float, decimals:Int):Float
+	{
+		if (decimals < 1)
+			return Math.floor(value);
 
-  /**
-   * Perform linear interpolation based on the current framerate.
-   * @param lerp Value used to interpolate between `base` and `target`.
-   *
-   * @return The interpolated value.
-   */
-  @:deprecated('Use smoothLerpPrecision instead')
-  public static function cameraLerp(lerp:Float):Float
-  {
-    return lerp * (FlxG.elapsed / (1 / 60));
-  }
+		var tempMult:Float = 1;
+		for (i in 0...decimals)
+			tempMult *= 10;
 
-  /**
-   * Backwards compatibility for `smoothLerpPrecision`.
-   *
-   * Perform a framerate-independent linear interpolation between the base value and the target.
-   * @param current The current value.
-   * @param target The target value.
-   * @param elapsed The time elapsed since the last frame.
-   * @param duration The total duration of the interpolation. Nominal duration until remaining distance is less than `precision`.
-   * @param precision The target precision of the interpolation. Defaults to 1% of distance remaining.
-   * @see https://twitter.com/FreyaHolmer/status/1757918211679650262
-   *
-   * @return A value between the current value and the target value.
-   */
-  @:deprecated('Use smoothLerpPrecision instead')
-  public static function smoothLerp(current:Float, target:Float, elapsed:Float, duration:Float, precision:Float = 1 / 100):Float
-  {
-    // An alternative algorithm which uses a separate half-life value:
-    // var halfLife:Float = -duration / logBase(2, precision);
-    // lerp(current, target, 1 - exp2(-elapsed / halfLife));
+		var newValue:Float = Math.floor(value * tempMult);
+		return newValue / tempMult;
+	}
 
-    if (current == target) return target;
+	/**
+		Makes a number array
+		* @param	min starting number. default is 0
+		* @param	max ending number
+		* @return the new array
+	**/
+	public static inline function numberArray(?min:Int, max:Int):Array<Int>
+	{
+		if (min == null)
+			min = 0;
+		return [for (i in min...max) i];
+	}
 
-    var result:Float = lerp(current, target, 1 - Math.pow(precision, elapsed / duration));
+	/**
+	 * A faster, but less accurate version of `Math.tan()`.   Probably
+	 * @param	rad 	The angle in radians.
+	 * @return	The approximated tangent of `rad`
+	 */
+	public static inline function fastTan(rad:Float) // thanks schmoovin
+	{
+		return (FlxMath.fastSin(rad) / FlxMath.fastCos(rad));
+	}
+}
 
-    // TODO: Is there a better way to ensure a lerp which actually reaches the target?
-    // Research a framerate-independent PID lerp.
-    if (Math.abs(result - target) < (precision * target)) result = target;
 
-    return result;
-  }
 
-  /**
-   * GCD stands for Greatest Common Divisor
-   * It's used in FullScreenScaleMode to prevent weird window resolutions from being counted as wide screen since those were causing issues positioning the game
-   * It returns the greatest common divisor between m and n
-   *
-   * @param m The first number to factor
-   * @param n The second number to factor
-   * @return The greatest common divisor between m and n
-   */
-  public static function gcd(m:Int, n:Int):Int
-  {
-    m = Math.floor(Math.abs(m));
-    n = Math.floor(Math.abs(n));
-    var t;
-    do
-    {
-      if (n == 0) return m;
-      t = m;
-      m = n;
-      n = t % m;
-    } while (true);
-  }
+// modified from lime.math.Vector4
+/**
+	`Vector3` is a vector suitable for three-dimensional
+	math, containing (x, y, z) components
+**/
+#if !lime_debug
+@:fileXml('tags="haxe,release"')
+@:noDebug
+#end
+class Vector3 implements IFlxPooled
+{
+	static final _pool = new FlxPool<Vector3>(() -> new Vector3());
+
+	public static function get(x:Float = 0, y:Float = 0, z:Float = 0):Vector3
+	{
+		return _pool.get().setTo(x, y, z);
+	}
+
+	public static inline function recycle(x:Float = 0, y:Float = 0, z:Float = 0):Vector3
+	{
+		return _pool.get().setTo(x, y, z);
+	}
+
+	public inline function put():Void
+	{
+		setTo(0, 0, 0);
+		_pool.put(this);
+	}
+
+	// should set this up weak vecs later
+	var _weak:Bool = false;
+
+	public inline function putWeak() {}
+
+	public function destroy():Void {}
+
+	/**
+		A constant representing the x axis (1, 0, 0)
+	**/
+	public static var X_AXIS(get, never):Vector3;
+
+	/**
+		A constant representing the y axis (0, 1, 0)
+	**/
+	public static var Y_AXIS(get, never):Vector3;
+
+	/**
+		A constant representing the z axis (0, 0, 1)
+	**/
+	public static var Z_AXIS(get, never):Vector3;
+
+	/**
+		Get the length of this vector
+	**/
+	public var length(get, never):Float;
+
+	/**
+		Get the squared length of this vector
+		(avoiding the use of `Math.sqrt` for faster
+		performance)
+	**/
+	public var lengthSquared(get, never):Float;
+
+	/**
+		The x component value
+	**/
+	public var x:Float;
+
+	/**
+		The y component value
+	**/
+	public var y:Float;
+
+	/**
+		The z component value
+	**/
+	public var z:Float;
+
+	/**
+		Creates a new `Vector3` instance
+		@param	x	(Optional) An initial x value (default is 0)
+		@param	y	(Optional) An initial y value (default is 0)
+		@param	z	(Optional) An initial z value (default is 0)
+	**/
+	public function new(x:Float = 0.0, y:Float = 0.0, z:Float = 0.0)
+	{
+		setTo(x, y, z);
+	}
+
+	/**
+		Adds two `Vector3` instances together and returns the result
+		@param	a	A `Vector3` instance to add to the current one
+		@param	result	(Optional) A `Vector3` instance to store the result
+		@return	A `Vector3` instance with the added value
+	**/
+	public inline function add(a:Vector3, result:Vector3 = null):Vector3
+	{
+		result ??= Vector3.get();
+		result.setTo(this.x + a.x, this.y + a.y, this.z + a.z);
+		return result;
+	}
+
+	/**
+		Calculates the angle between two `Vector3` coordinates
+		@param	a	A `Vector3` instance
+		@param	b	A second `Vector3` instance
+		@return	The calculated angle
+	**/
+	public static inline function angleBetween(a:Vector3, b:Vector3):Float
+	{
+		var a0 = a.clone();
+		a0.normalize();
+		var b0 = b.clone();
+		b0.normalize();
+
+		return Math.acos(a0.dotProduct(b0));
+	}
+
+	/**
+		Creates a new `Vector3` instance with the same values as the current one
+		@return	A new `Vector3` instance with the same values
+	**/
+	public inline function clone():Vector3
+	{
+		return Vector3.get(x, y, z);
+	}
+
+	/**
+		Creates a new `Vector3` instance linearly interpolated between this Vector3 and the given goal by the given alpha
+		@param goal A `Vector3` instance to interpolate towards
+		@param alpha How far the interpolation is
+		@return A `Vector3 instance linearly interpolated`
+	**/
+	// https://gamedev.stackexchange.com/questions/18615/how-do-i-linearly-interpolate-between-two-vectors
+	public function lerp(goal:Vector3, alpha:Float):Vector3
+	{
+		return Vector3.get(alpha * goal.x + x * (1 - alpha), alpha * goal.y + y * (1 - alpha), alpha * goal.z + z * (1 - alpha));
+	}
+
+	/**
+		Copies the x, y and z component values of another `Vector3` instance
+		@param	sourceVector3	A `Vector3` instance to copy from
+	**/
+	public inline function copyFrom(sourceVector3:Vector3):Void
+	{
+		x = sourceVector3.x;
+		y = sourceVector3.y;
+		z = sourceVector3.z;
+	}
+
+	/**
+		Performs vector multiplication between this vector and another `Vector3` instance
+		@param	A `Vector3` instance to multiply by
+		@param	result(Optional) A `Vector3` to use for the result
+		@return	A `Vector3` instance with the result
+		@see https://en.wikipedia.org/wiki/Cross_product
+	**/
+	public inline function crossProduct(a:Vector3, result:Vector3 = null):Vector3
+	{
+		result ??= Vector3.get();
+		result.setTo(y * a.z - z * a.y, z * a.x - x * a.z, x * a.y - y * a.x);
+		return result;
+	}
+
+	/**
+		Decrements the x, y and z component values by those in another `Vector3` instance
+		@param	a	A `Vector3` instance to decrement the current vector by
+	**/
+	public inline function decrementBy(a:Vector3):Void
+	{
+		x -= a.x;
+		y -= a.y;
+		z -= a.z;
+	}
+
+	/**
+		Calculates the distance between two vectors
+		@param	pt1	A `Vector3` instance
+		@param	pt2	A second `Vector3` instance
+		@return	The distance between each vector
+	**/
+	public inline static function distance(pt1:Vector3, pt2:Vector3):Float
+	{
+		var x = pt2.x - pt1.x;
+		var y = pt2.y - pt1.y;
+		var z = pt2.z - pt1.z;
+
+		return Math.sqrt(x * x + y * y + z * z);
+	}
+
+	/**
+		Calculates the squared distance between two vectors,
+		(avoids the use of `Math.sqrt` for faster performance)
+		@param	pt1	A `Vector3` instance
+		@param	pt2	A second `Vector3` instance
+		@return	The square of the distance between each vector
+	**/
+	public inline static function distanceSquared(pt1:Vector3, pt2:Vector3):Float
+	{
+		var x = pt2.x - pt1.x;
+		var y = pt2.y - pt1.y;
+		var z = pt2.z - pt1.z;
+
+		return x * x + y * y + z * z;
+	}
+
+	/**
+		Calculates the dot product of the current vector with another `Vector3` instance
+		@param	a	A `Vector3` instance to use in the dot product
+		@return	The calculated dot product value
+		@see https://en.wikipedia.org/wiki/Dot_product
+	**/
+	public inline function dotProduct(a:Vector3):Float
+	{
+		return x * a.x + y * a.y + z * a.z;
+	}
+
+	/**
+		Whether two `Vector3` instances have equal component values.
+
+		Comparing the w component value is optional.
+		@param	toCompare	A `Vector3` instance to compare against
+		@return	Whether both instances have equal values
+	**/
+	public inline function equals(toCompare:Vector3):Bool
+	{
+		return x == toCompare.x && y == toCompare.y && z == toCompare.z;
+	}
+
+	/**
+		Increments the x, y and z component values by those in a second `Vector3` instance
+		@param	a	A `Vector3` instance to increment the current vector by
+	**/
+	public inline function incrementBy(a:Vector3):Void
+	{
+		x += a.x;
+		y += a.y;
+		z += a.z;
+	}
+
+	/**
+		Whether two `Vector3` instances have nearly equal component values.
+		Comparison is performed within a given tolerance value.
+		@param	toCompare	A `Vector3` instance to compare against
+		@param	tolerance	A floating point value determining how near the values must be to be considered near equal
+		@return	Whether both instances have equal values, within the given tolerance
+	**/
+	public inline function nearEquals(toCompare:Vector3, tolerance:Float):Bool
+	{
+		return Math.abs(x - toCompare.x) < tolerance && Math.abs(y - toCompare.y) < tolerance && Math.abs(z - toCompare.z) < tolerance;
+	}
+
+	/**
+		Negates the x, y and z values of the current vector
+		(multiplying each value by -1)
+	**/
+	public inline function negate():Void
+	{
+		x *= -1;
+		y *= -1;
+		z *= -1;
+	}
+
+	/**
+		Divides the x, y and z component values by the
+		length of the vector
+	**/
+	public inline function normalize():Float
+	{
+		var l = length;
+
+		if (l != 0)
+		{
+			x /= l;
+			y /= l;
+			z /= l;
+		}
+
+		return l;
+	}
+
+	/**
+		Projects this vector onto another `Vector3` instance
+		@param onto A `Vector3` instance to project onto
+		@param result (Optional) A `Vector3` instance to store the result
+		@return A `Vector3` instance containing the projected vector
+		@see https://en.wikipedia.org/wiki/Vector_projection
+	**/
+	public inline function project(onto:Vector3, result:Vector3 = null):Vector3
+	{
+		result ??= Vector3.get();
+		var scalar = dotProduct(onto) / onto.lengthSquared;
+		result.setTo(onto.x * scalar, onto.y * scalar, onto.z * scalar);
+		return result;
+	}
+
+	/**
+		Projects this vector onto a plane defined by a normal `Vector3`
+		@param normal A `Vector3` instance representing the plane's normal (should be normalized)
+		@param result (Optional) A `Vector3` instance to store the result
+		@return A `Vector3` instance containing the projected vector
+		@see https://en.wikipedia.org/wiki/Vector_projection
+	**/
+	public inline function projectOntoPlane(normal:Vector3, result:Vector3 = null):Vector3
+	{
+		result ??= Vector3.get();
+		var projected = project(normal, Vector3.get());
+		result.setTo(x - projected.x, y - projected.y, z - projected.z);
+		projected.put();
+		return result;
+	}
+
+	/**
+		Puts this vector's values on an Absolute Value.
+		@param result (Optional) A `Vector3` instance to store the result
+		@return A `Vector` instance containing the value in absolute.
+	**/
+	public inline function abs(result:Vector3 = null):Vector3
+	{
+		result ??= Vector3.get();
+		result.setTo(Math.abs(x), Math.abs(y), Math.abs(z));
+		return result;
+	}
+
+	/**
+		Scales the x, y and z component values by a scale value
+		@param	s	The amount of scale to apply
+	**/
+	public inline function scaleBy(s:Float):Void
+	{
+		x *= s;
+		y *= s;
+		z *= s;
+	}
+
+	/**
+		Sets the x, y and z component values
+		@param	xa	An x value
+		@param	ya	A y value
+		@param	za	A z value
+
+		@return returns `this` vector3
+	**/
+	public inline function setTo(xa:Float, ya:Float, za:Float):Vector3
+	{
+		x = xa;
+		y = ya;
+		z = za;
+
+		return this;
+	}
+
+	/**
+		Subtracts the values of a second `Vector3` instance
+		from the current one
+		@param	a	A second `Vector3` instance to substract
+		@param	result	(Optional) A `Vector3` instance to store the result
+		@return	A `Vector3` instance containing the subtracted value
+	**/
+	public inline function subtract(a:Vector3, result:Vector3 = null):Vector3
+	{
+		result ??= Vector3.get();
+		result.setTo(x - a.x, y - a.y, z - a.z);
+		return result;
+	}
+
+	/**
+		Creates a `Vector3` from spherical coordinates
+		@param theta The polar angle in radians (from the z axis)
+		@param phi The azimuthal angle in radians (from the x axis)
+		@return A normalized `Vector3` instance
+		@see https://en.wikipedia.org/wiki/Spherical_coordinate_system
+	**/
+	public static inline function fromAngle(theta:Float, phi:Float):Vector3
+	{
+		var sinTheta = Math.sin(theta);
+		return Vector3.get(sinTheta * Math.cos(phi), sinTheta * Math.sin(phi), Math.cos(theta));
+	}
+
+	/**
+		Returns a component-wise minimum of two `Vector3` instances
+		@param a A `Vector3` instance
+		@param b A second `Vector3` instance
+		@param result (Optional) A `Vector3` instance to store the result
+		@return A `Vector3` instance with the minimum values
+	**/
+	public static inline function min(a:Vector3, b:Vector3, result:Vector3 = null):Vector3
+	{
+		result ??= Vector3.get();
+		result.setTo(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z));
+		return result;
+	}
+
+	/**
+		Returns a component-wise maximum of two `Vector3` instances
+		@param a A `Vector3` instance
+		@param b A second `Vector3` instance
+		@param result (Optional) A `Vector3` instance to store the result
+		@return A `Vector3` instance with the maximum values
+	**/
+	public static inline function max(a:Vector3, b:Vector3, result:Vector3 = null):Vector3
+	{
+		result ??= Vector3.get();
+		result.setTo(Math.max(a.x, b.x), Math.max(a.y, b.y), Math.max(a.z, b.z));
+		return result;
+	}
+
+	@:dox(hide) public inline function toString():String
+	{
+		return "Vector3(" + x + ", " + y + ", " + z + ")";
+	}
+
+	// Getters & Setters
+	@:noCompletion private inline function get_length():Float
+	{
+		return Math.sqrt(x * x + y * y + z * z);
+	}
+
+	@:noCompletion private inline function get_lengthSquared():Float
+	{
+		return x * x + y * y + z * z;
+	}
+
+	private inline static function get_X_AXIS():Vector3
+	{
+		return Vector3.get(1, 0, 0);
+	}
+
+	private inline static function get_Y_AXIS():Vector3
+	{
+		return Vector3.get(0, 1, 0);
+	}
+
+	private inline static function get_Z_AXIS():Vector3
+	{
+		return Vector3.get(0, 0, 1);
+	}
 }

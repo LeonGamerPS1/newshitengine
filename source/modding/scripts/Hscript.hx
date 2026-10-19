@@ -7,6 +7,12 @@ class Hscript extends BaseScript
 {
 	var script:Script;
 
+	public function new(path)
+	{
+		super(path);
+		dummy = false;
+	}
+
 	override function load(path:String)
 	{
 		var input = Paths.getText(path);
@@ -14,7 +20,6 @@ class Hscript extends BaseScript
 
 		setDefaultVars();
 		script.interp.parent = FlxG.state;
-
 
 		script.start();
 		setVariable('FlxG', flixel.FlxG);
@@ -30,7 +35,6 @@ class Hscript extends BaseScript
 		setVariable('Conductor', Conductor);
 		setVariable('BGSprite', BGSprite);
 		setVariable('game', FlxG.state);
-
 
 		call('new');
 	}
@@ -48,7 +52,7 @@ class Hscript extends BaseScript
 	override public function call(fn:String, ?args:Array<Dynamic>):Dynamic
 	{
 		var fun = (script.variables.get(fn) ?? script.interp.getLocal(fn));
-		if(fun == null)
+		if (fun == null)
 			return null;
 		return script.call(fn, args ?? []);
 	}
