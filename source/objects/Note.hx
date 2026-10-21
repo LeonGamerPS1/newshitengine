@@ -56,6 +56,9 @@ class Note extends FlxSprite
 
 	public var shaderNote:RGB = new RGB();
 
+	public var hitCausesMiss:Bool = false;
+	public var doAnimation = true;
+
 	public function new(time:Float = 0, data:Int = 0, isT:Bool = false, isEn:Bool = false, t:String = 'NOTE_assets')
 	{
 		super();
@@ -112,7 +115,7 @@ class Note extends FlxSprite
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		if (!ignoreNote && actorline != null && actorline.autoPlay)
+		if (!hitCausesMiss && !ignoreNote && actorline != null && actorline.autoPlay)
 		{
 			if (!hit && time <= Conductor.time)
 				hit = true;

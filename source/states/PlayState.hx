@@ -19,6 +19,7 @@ import objects.gameplay.Character;
 import objects.gameplay.stages.Week1;
 import objects.ui.HealthBar;
 import objects.ui.HealthIcon;
+import openfl.system.Capabilities;
 
 class PlayState extends FlxState
 {
@@ -89,7 +90,7 @@ class PlayState extends FlxState
 		hud.cameras = [camHUD];
 		add(hud);
 
-		song ??= Song.loadFromJson('hard', 'endless-redux');
+		song ??= Song.loadFromJson('hard', 'endless');
 		Conductor.reset();
 		Conductor.bpm = song.bpm;
 		Conductor.time = -Conductor.beatLength * 5;
@@ -376,6 +377,16 @@ class PlayState extends FlxState
 
 	override public function update(elapsed:Float)
 	{
+		if (FlxG.keys.justPressed.F1)
+		{
+			var win = FlxG.stage.window;
+			FlxTween.tween(win, {
+				x: 0,
+				y: 0,
+				width: Capabilities.screenResolutionX,
+				height: Capabilities.screenResolutionY
+			}, 0.5);
+		}
 		call('onUpdate', [elapsed]);
 		FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, 0.95);
 		camHUD.zoom = FlxMath.lerp(1, camHUD.zoom, 0.95);
@@ -404,12 +415,12 @@ class PlayState extends FlxState
 
 		super.update(elapsed);
 
-		iconP1.setPosition(healthBar.center.x - 26, healthBar.center.y - (iconP1.frameHeight / 2 * iconP1.baseScale));
+		iconP1.setPosition(healthBar.center.x - 26, healthBar.center.y - iconP1.height / 2);
 		iconP2.setPosition(healthBar.center.x
 			- (iconP2.frameWidth * iconP2.scale.x)
 			+ (iconP2.frameWidth * iconP2.baseScale / 4),
 			healthBar.center.y
-			- (iconP2.frameHeight / 2 * iconP2.baseScale));
+			- iconP2.height / 2);
 		call('onUpdatePost', [elapsed]);
 
 		if (health <= healthBar.min || FlxG.keys.justPressed.R)

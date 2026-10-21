@@ -27,9 +27,10 @@ class Mods
 		{
 			for (mod in mods)
 			{
+				trace(mod);
 				Reflect.setField(FlxG.save.data.modDatas, mod.id, {enabled: mod.enabled, id: mod.id});
 			}
-		});
+		},false, 9999);
 
 		if (!FileSystem.exists(MOD_ROOT))
 			FileSystem.createDirectory(MOD_ROOT);

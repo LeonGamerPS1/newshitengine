@@ -29,15 +29,14 @@ class NoteSplash extends FlxSprite
 	public function setupNoteSplash(strumNote:Actor)
 	{
 		strum = strumNote;
-		shader = strumNote.shader;
+		shader = strum.shader;
 		setPosition(strumNote.x, strumNote.y);
 
 		if (frames == null)
-			frames = Paths.getSparrowAtlas('noteskins/funkin/noteSplashes');
+			frames = Paths.getSparrowAtlas('splashes');
 
 		animation.play('note' + (strumNote.lane) % 4 + '-' + FlxG.random.int(0, 1), true);
 		animation.curAnim.frameRate = 24 + FlxG.random.int(-5, 5);
-		scale.setXY(.7);
 		antialiasing = true;
 		updateHitbox();
 		centerOffsets();

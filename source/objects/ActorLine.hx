@@ -133,7 +133,7 @@ class ActorLine extends FlxGroup
 
 		if (note.time <= Conductor.time - (350 / speed))
 		{
-			if (!autoPlay && !note.hit)
+			if (!note.ignoreNote && !note.hitCausesMiss && !autoPlay && !note.hit)
 			{
 				miss(note.lane, note.isTrail);
 				noteMissSignal.dispatch(note,);
@@ -144,22 +144,35 @@ class ActorLine extends FlxGroup
 
 	public function hitNote(note:Note)
 	{
+		if (!autoPlay && note.hitCausesMiss)
+		{
+			miss(note.lane, note.isTrail);
+			noteMissSignal.dispatch(note);
+			note.hit = true;
+			killNote(note);
+			return;
+		}
 		var actor:Actor = actors.members[note.lane];
 		actor.playAnim('confirm');
 		note.hit = true;
-
-		if (note.character != null)
+		if (note.doAnimation)
 		{
-			note.character.hitNote(note);
-		}
-		else
-		{
-			for (char in characters)
+			if (note.character != null)
 			{
-				char.hitNote(note);
+				note.character.hitNote(note);
+			}
+			else
+			{
+				for (char in characters)
+				{
+					char.hitNote(note);
+				}
 			}
 		}
 
+		if(!note.isTrail) {
+			spawnSplashOnStrum(actor);
+		}
 		if (autoPlay)
 		{
 			actor.resetAnim = (note.seglength + 20) / 1000;
