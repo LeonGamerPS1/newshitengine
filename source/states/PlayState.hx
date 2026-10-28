@@ -95,6 +95,7 @@ class PlayState extends FunkinState
 		super.create();
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
+		
 		characterChangeMapDad = new Map<String, Character>();
 		characterChangeMapGF = new Map<String, Character>();
 		characterChangeMapBF = new Map<String, Character>();
@@ -134,6 +135,7 @@ class PlayState extends FunkinState
 		var instPath = 'songs/${song.folder}/Inst';
 		inst = FlxG.sound.list.add(new FlxSound());
 		inst.loadEmbedded(Paths.getSound(instPath, true), false);
+		inst.onComplete = endSong;
 
 		var instPath = 'songs/${song.folder}/Voices';
 		voices = FlxG.sound.list.add(new FlxSound());
@@ -683,5 +685,9 @@ class PlayState extends FunkinState
 	{
 		FlxTimer.globalManager.clear();
 		super.destroy();
+	}
+
+	function endSong() {
+		Main.switchState(new MainMenu());
 	}
 }
