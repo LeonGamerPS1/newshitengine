@@ -1,11 +1,12 @@
 package objects;
 
 import objects.gameplay.Character;
-import shaders.RGB;
+import shaders.ColorSwap;
 
-class Note extends FlxSprite
+class Note extends FlxOffsetSprite
 {
 	public static var swagWidth:Float = Actor.Width;
+
 	public var actorline:ActorLine;
 
 	public var time:Float = 0;
@@ -16,6 +17,7 @@ class Note extends FlxSprite
 	public var mA:Float = 1;
 	public var isTrail:Bool = false;
 	public var isTail:Bool = false;
+	public var rating = "none";
 
 	public var lastTexture:String = '';
 	public var seglength:Float = 0;
@@ -36,14 +38,7 @@ class Note extends FlxSprite
 	 */
 	public static var currentBlurring:Bool = true;
 
-	public static var arrowRGB:Array<Array<FlxColor>> = [
-		[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
-		[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
-		[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
-		[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
-	];
-
-	public var earlyHitMult:Float = 1;
+	public var earlyHitMult:Float = 0;
 	public var lateHitMult:Float = 1;
 
 	public var parentNote:Note;
@@ -53,11 +48,12 @@ class Note extends FlxSprite
 
 	public var offsetX:Float = 0;
 	public var offsetY:Float = 0;
-
-	public var shaderNote:RGB = new RGB();
+	public var baseAngle:Float = 0;
 
 	public var hitCausesMiss:Bool = false;
 	public var doAnimation = true;
+
+	public var colorSwap:ColorSwap;
 
 	public function new(time:Float = 0, data:Int = 0, isT:Bool = false, isEn:Bool = false, t:String = 'NOTE_assets')
 	{
@@ -67,11 +63,9 @@ class Note extends FlxSprite
 		lane = data;
 		isTrail = isT;
 		isTail = isEn;
-		shader = shaderNote;
 
-		var arr = arrowRGB[data];
-		shaderNote.setArray(arr);
-		
+
+
 		loadTexture(t);
 	}
 
@@ -79,7 +73,7 @@ class Note extends FlxSprite
 	{
 		if (texture == lastTexture)
 			return;
-	
+
 		lastTexture = currentSkin ?? texture;
 		final n = dirs[lane];
 		frames = Paths.getSparrowAtlas(lastTexture);
@@ -88,16 +82,17 @@ class Note extends FlxSprite
 		animation.addByPrefix('tail', n + ' hold end0', 24);
 		playAnim('colored');
 
-		scale.setXY(currentNoteScale);
+		scale.set(currentNoteScale, currentNoteScale);
 
 		if (isTrail)
 		{
 			mA = .6;
 			alpha = mA;
-			earlyHitMult = 0;
+
 			playAnim(!isTail ? 'segment' : 'tail');
-			offsetY = -7;
 		}
+		else
+			earlyHitMult = 1;
 		updateHitbox();
 		antialiasing = currentBlurring;
 	}
@@ -115,9 +110,14 @@ class Note extends FlxSprite
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		if (!hitCausesMiss && !ignoreNote && actorline != null && actorline.autoPlay)
+
+		if (!hitCausesMiss
+			&& !ignoreNote
+			&& actorline != null
+			&& actorline.autoPlay
+			&& time < Conductor.time + (Conductor.sfz * earlyHitMult))
 		{
-			if (!hit && time <= Conductor.time)
+			if ((isTrail && prevNote.hit) || time <= Conductor.time)
 				hit = true;
 		}
 	}
@@ -138,13 +138,13 @@ class Note extends FlxSprite
 			scale.y = (seglength * 0.45 * speed) / frameHeight;
 
 			updateHitbox();
+
 		}
 	}
 
 	function get_canBeHit():Bool
 	{
-		return ((time > Conductor.time - Conductor.offset - (Conductor.sfz * lateHitMult)
-			&& time < Conductor.time - Conductor.offset + (Conductor.sfz * earlyHitMult)))
+		return ((time > Conductor.time - (Conductor.sfz * lateHitMult) && time < Conductor.time + (Conductor.sfz * earlyHitMult)))
 			&& !actorline.autoPlay;
 	}
 
@@ -154,7 +154,7 @@ class Note extends FlxSprite
 
 	public function clipToStrumNote(myStrum:Actor)
 	{
-		var center:Float = myStrum.y + Actor.Width * .5;
+		var center:Float = myStrum.y + myStrum.height * .5;
 		final mustPress = !actorline.autoPlay;
 		if (isTrail && (mustPress || !ignoreNote) && (!mustPress || (hit || (prevNote.hit && !canBeHit))))
 		{
@@ -178,7 +178,7 @@ class Note extends FlxSprite
 				swagRect.height = (height / scale.y) - swagRect.y;
 			}
 
-			clipRect = swagRect.round();
+			clipRect = swagRect;
 		}
 	}
 

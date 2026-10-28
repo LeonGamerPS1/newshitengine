@@ -10,7 +10,7 @@ class NoteSplash extends FlxSprite
 	{
 		super(x, y);
 
-		frames = Paths.getSparrowAtlas('splashes');
+		frames = Paths.getSparrowAtlas('noteSplashes');
 
 		animation.addByPrefix('note1-0', 'note splash blue 1', 24, false);
 		animation.addByPrefix('note2-0', 'note splash green 1', 24, false);
@@ -33,21 +33,23 @@ class NoteSplash extends FlxSprite
 		setPosition(strumNote.x, strumNote.y);
 
 		if (frames == null)
-			frames = Paths.getSparrowAtlas('splashes');
+			frames = Paths.getSparrowAtlas('noteSplashes');
 
 		animation.play('note' + (strumNote.lane) % 4 + '-' + FlxG.random.int(0, 1), true);
 		animation.curAnim.frameRate = 24 + FlxG.random.int(-5, 5);
 		antialiasing = true;
+
 		updateHitbox();
 		centerOffsets();
 		centerOrigin();
 		setPosition(strumNote.x + (strumNote.width * 0.5 - width * 0.5), strumNote.y + (strumNote.height * 0.5 - height * 0.5));
-		alpha = 1;
+		
+		alpha = .6;
 	}
 
 	override function kill()
 	{
-		alpha = 0;
+
 		super.kill();
 	}
 

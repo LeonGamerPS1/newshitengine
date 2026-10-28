@@ -224,6 +224,7 @@ class Character extends FlxAnimate
 		super.destroy();
 		animOffsets = null;
 		json = null;
+				Conductor.onBeat.remove(dance);
 	}
 
 	public function missDir(dir:Int)
@@ -236,4 +237,6 @@ class Character extends FlxAnimate
 			holdTimer = (Conductor.stepLength * json.time) / 1000;
 		}
 	}
+
+
 }

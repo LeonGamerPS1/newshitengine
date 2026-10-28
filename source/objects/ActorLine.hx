@@ -7,7 +7,6 @@ class ActorLine extends FlxGroup
 {
 	public var actors:FlxTypedGroup<Actor>;
 	public var notes:FlxTypedGroup<Note>;
-	public var holds:FlxTypedGroup<Note>;
 
 	public var lastTexture:String = 'NOTE_assets';
 
@@ -26,9 +25,12 @@ class ActorLine extends FlxGroup
 	public var missSignal:FlxTypedSignal<Int->Bool->Void>;
 	public var noteMissSignal:FlxTypedSignal<Note->Void>;
 
-	public function new(sX:Float = 0, sY:Float = 0)
+	public var lastDownscroll:Bool = false;
+
+	public function new(sX:Float = 0, sY:Float = 0, downscroll:Bool = false)
 	{
 		super();
+		lastDownscroll = downscroll;
 		startX = sX;
 		startY = sY;
 
@@ -38,9 +40,6 @@ class ActorLine extends FlxGroup
 
 		actors = new FlxTypedGroup<Actor>();
 		add(actors);
-
-		holds = new FlxTypedGroup<Note>();
-		add(holds);
 
 		notes = new FlxTypedGroup<Note>();
 		add(notes);
@@ -76,8 +75,10 @@ class ActorLine extends FlxGroup
 	{
 		var startX = startX + (-Actor.Width * keys / 2);
 		var actor:Actor = new Actor(i, lastTexture);
+		actor.actorline = this;
 		actor.x = startX + (Actor.Width * i);
 		actor.y = startY;
+		actor.flipScroll = lastDownscroll;
 		actors.add(actor);
 	}
 
@@ -101,6 +102,8 @@ class ActorLine extends FlxGroup
 		note.seglength = steplength;
 		note.prevNote = unspawnNotes[unspawnNotes.length - 1];
 		note.type = type;
+		if (lastDownscroll)
+			note.baseAngle = 180;
 		unspawnNotes.push(note);
 		return note;
 	}
@@ -120,6 +123,11 @@ class ActorLine extends FlxGroup
 
 		var actor:Actor = actors.members[note.lane];
 		note.setPosition(actor.x + actor.width * .5 - note.width * .5 + note.offsetX, actor.y + note.getDistance(actor, speed));
+		if (actor.flipScroll && note.isTrail)
+		{
+			note.y -= (note.frameHeight * note.scale.y) - (actor.height);
+		}
+		note.alpha = actor.alpha * note.mA;
 		if (!note.isTrail)
 			note.angle = actor.angle;
 		if (autoPlay && note.hit && !note.hitByenemy)
@@ -170,12 +178,9 @@ class ActorLine extends FlxGroup
 			}
 		}
 
-		if(!note.isTrail) {
-			spawnSplashOnStrum(actor);
-		}
 		if (autoPlay)
 		{
-			actor.resetAnim = (note.seglength + 20) / 1000;
+			actor.resetAnim = actor.animation.curAnim.numFrames * actor.animation.curAnim.frameDuration;
 		}
 		hitSignal.dispatch(note);
 		if (!note.isTrail)
@@ -185,7 +190,6 @@ class ActorLine extends FlxGroup
 	public function killNote(n:Note)
 	{
 		notes.remove(n, true);
-		holds.remove(n, true);
 		n.destroy();
 		n = null;
 	}
@@ -204,10 +208,8 @@ class ActorLine extends FlxGroup
 			var n = unspawnNotes[0];
 			if (n.time <= Conductor.time + (1500 / speed))
 			{
-				if (!n.isTrail)
-					notes.insert(0, n);
-				else
-					holds.insert(0, n);
+				notes.insert(0, n);
+
 				unspawnNotes.remove(n);
 			}
 		}
@@ -216,13 +218,11 @@ class ActorLine extends FlxGroup
 		if (!autoPlay)
 			inputSystemStuff();
 		notes.forEachAlive(updateNote);
-		holds.forEachAlive(updateNote);
 	}
 
 	public function beatHit(_)
 	{
 		notes.sort(sortNotesByTimeHelper, FlxSort.DESCENDING);
-		holds.sort(sortNotesByTimeHelper, FlxSort.DESCENDING);
 	}
 
 	inline public static function sortNotesByTimeHelper(Order:Int, Obj1:Note, Obj2:Note)
@@ -273,23 +273,6 @@ class ActorLine extends FlxGroup
 			var laneNotes:Array<Note> = [null, null, null, null];
 
 			notes.forEachAlive((n:Note) ->
-			{
-				if (n.canBeHit && !autoPlay && !n.hit)
-				{
-					var lane = n.lane;
-
-					if (laneNotes[lane] == null)
-					{
-						laneNotes[lane] = n;
-					}
-					else if (n.time < laneNotes[lane].time)
-					{
-						laneNotes[lane] = n;
-					}
-				}
-			});
-
-			holds.forEachAlive((n:Note) ->
 			{
 				if (n.canBeHit && !autoPlay && !n.hit)
 				{

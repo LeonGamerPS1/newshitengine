@@ -63,7 +63,7 @@ class HealthIcon extends FlxSprite
 
 	public function bump()
 	{
-		scale.setXY(baseScale * 1.4);
+		scale.set(baseScale * 1.4,baseScale * 1.4);
 		updateHitbox();
 	}
 

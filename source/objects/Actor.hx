@@ -1,8 +1,8 @@
 package objects;
 
-import shaders.RGB;
+import shaders.ColorSwap;
 
-class Actor extends FlxSprite
+class Actor extends FlxOffsetSprite
 {
 	public var lane:Int = 0;
 	public var lastTexture:String = '';
@@ -12,22 +12,19 @@ class Actor extends FlxSprite
 
 	public static var Width:Float = 160 * 0.7;
 
-	public var shaderNote:RGB = new RGB();
-
 	public var holding:Bool = false;
 
 	public var flipScroll:Bool = false;
 
+	public var actorline:ActorLine;
+	public var colorSwap:ColorSwap;
+
 	public function new(lane:Int = 0, texture:String = 'NOTE_assets')
 	{
 		super();
+
 		this.lane = lane;
 		loadTexture(texture);
-
-		shader = shaderNote;
-
-		var arr = Note.arrowRGB[lane];
-		shaderNote.setArray(arr);
 	}
 
 	public function loadTexture(texture:String = 'NOTE_assets')
@@ -37,11 +34,11 @@ class Actor extends FlxSprite
 		lastTexture = Note.currentSkin ?? texture;
 		final n = dirs[lane];
 		frames = Paths.getSparrowAtlas(lastTexture);
-		animation.addByPrefix('grey', 'arrow' + n.toUpperCase(), 24, false);
+		animation.addByPrefix('grey', 'arrow' + n.toUpperCase(), 24, true);
 		animation.addByPrefix('press', n + ' press', 24, false);
 		animation.addByPrefix('confirm', n + ' confirm', 24, false);
 		playAnim('grey');
-		scale.setXY(Note.currentNoteScale);
+		scale.set(Note.currentNoteScale, Note.currentNoteScale);
 		updateHitbox();
 		antialiasing = Note.currentBlurring;
 	}
@@ -60,16 +57,14 @@ class Actor extends FlxSprite
 		super.update(elapsed);
 	}
 
-	public function playAnim(anim:String)
+	public function playAnim(anim:String, force = true)
 	{
-		animation.play(anim, true);
+		animation.play(anim, force);
 		if (animation.curAnim != null)
 		{
 			centerOffsets();
-			centerOrigin();
-		}
-		if(shaderNote != null) {
-			shader = anim != 'grey' ? shaderNote : null;
+			if (anim == 'confirm')
+				offset.subtract(13, 13);
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package backend.util;
+
 import flixel.util.FlxPool;
+
 @:nullSafety(Strict)
 class MathUtil
 {
@@ -73,7 +75,12 @@ class MathUtil
 		FlxMath.lerp but accounts for FPS.
 	**/
 	public static inline function fpsLerp(v1:Float, v2:Float, ratio:Float)
-		return FlxMath.lerp(v1, v2, FlxMath.getElapsedLerp(ratio, FlxG.elapsed));
+		return FlxMath.lerp(v1, v2, getElapsedLerp(ratio, FlxG.elapsed));
+
+	public static function getElapsedLerp(lerp:Float, elapsed:Float):Float
+	{
+		return 1.0 - Math.pow(1.0 - lerp, elapsed * 60);
+	}
 
 	/**
 	 * referenced via https://youtu.be/LSNQuFEDOyQ
@@ -154,8 +161,6 @@ class MathUtil
 		return (FlxMath.fastSin(rad) / FlxMath.fastCos(rad));
 	}
 }
-
-
 
 // modified from lime.math.Vector4
 /**

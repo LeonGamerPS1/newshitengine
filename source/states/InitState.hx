@@ -1,5 +1,6 @@
 package states;
 
+import backend.Song;
 import backend.input.Controls;
 import debug.FunkinDebugDisplay;
 import debug.MemoryUtil;
@@ -21,7 +22,7 @@ import sys.FileSystem;
 import sys.io.File;
 
 #if linux @:cppInclude('../../../vendor/linux/include/gamemode_client.h') #end
-class InitState extends FlxState
+class InitState extends FunkinState
 {
 	#if desktop
 	// stolen from psych engine lol
@@ -43,7 +44,6 @@ class InitState extends FlxState
 
 	public override function create()
 	{
-		
 		// gamemode client.h
 		#if linux
 		var errcode = 0;
@@ -79,11 +79,47 @@ class InitState extends FlxState
 		FlxG.signals.preStateSwitch.add(Conductor.reset);
 
 		Controls.init();
-	
+
 		modding.Mods.init();
 		trace('loaded ' + modding.Mods.mods.length + ' mods');
 		@:privateAccess FlxG.keys._nativeCorrection.set("0_43", FlxKey.PLUS);
-		FlxG.switchState(new PlayState());
+
+		final args = Sys.args();
+
+		var hasSong = false;
+		for (arg in args)
+		{
+			if (StringTools.startsWith(arg, 'song='))
+			{
+				hasSong = true;
+				break;
+			}
+		}
+
+		if (hasSong)
+		{
+			
+			var diff = getDefinedValue(args, 'diff', 'hard');
+			var song = getDefinedValue(args, 'song', 'careless');
+
+			PlayState.song = Song.loadFromJson(diff, song);
+			FlxG.switchState(new PlayState());
+			return;
+		}
+		Main.switchState(new MainMenu());
+	}
+
+	static function getDefinedValue(args:Array<String>, name:String, defau:String):String
+	{
+		var prefix = name + "=";
+		for (arg in args)
+		{
+			if (arg.indexOf(prefix) == 0)
+			{
+				return arg.substring(prefix.length);
+			}
+		}
+		return defau;
 	}
 
 	function onGameResized(width:Int, height:Int)

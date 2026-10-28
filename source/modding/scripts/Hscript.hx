@@ -18,10 +18,11 @@ class Hscript extends BaseScript
 		var input = Paths.getText(path);
 		script = new Script(input, path);
 
-		setDefaultVars();
+	
 		script.interp.parent = FlxG.state;
 
 		script.start();
+			setDefaultVars();
 		setVariable('FlxG', flixel.FlxG);
 		setVariable('FlxMath', flixel.math.FlxMath);
 		setVariable('FlxSprite', flixel.FlxSprite);

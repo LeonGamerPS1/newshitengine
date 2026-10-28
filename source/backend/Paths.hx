@@ -144,7 +144,7 @@ class Paths
 			return cast cachedAtlases.get(pathXML);
 		if (!FileSystem.exists(pathPng) || !FileSystem.exists(pathXML))
 		{
-			FlxG.log.warn('oh noes!!! atlas not here!!! $pathPng | $pathXML');
+			trace('oh noes!!! atlas not here!!! $pathPng | $pathXML');
 			return null;
 		}
 
