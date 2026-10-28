@@ -93,7 +93,8 @@ class PlayState extends FunkinState
 	override public function create()
 	{
 		super.create();
-		FlxG.sound.music.stop();
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.stop();
 		characterChangeMapDad = new Map<String, Character>();
 		characterChangeMapGF = new Map<String, Character>();
 		characterChangeMapBF = new Map<String, Character>();
