@@ -84,7 +84,7 @@ class PlayState extends FunkinState
 
 	public var modManager:ModchartSystem;
 
-	public var downscroll:Bool = false;
+	public var downscroll:Bool = true;
 
 	public var characterChangeMapDad:Map<String, Character>;
 	public var characterChangeMapGF:Map<String, Character>;

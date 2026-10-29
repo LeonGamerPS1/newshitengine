@@ -125,7 +125,7 @@ class ActorLine extends FlxGroup
 		note.setPosition(actor.x + actor.width * .5 - note.width * .5 + note.offsetX, actor.y + note.getDistance(actor, speed));
 		if (actor.flipScroll && note.isTrail)
 		{
-			note.y -= (note.frameHeight * note.scale.y) - (actor.height);
+			note.y -= (note.frameHeight * note.scale.y) - (actor.height / 2);
 		}
 		note.alpha = actor.alpha * note.mA;
 		if (!note.isTrail)
