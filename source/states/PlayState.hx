@@ -105,6 +105,7 @@ class PlayState extends FunkinState
 
 		camHUD = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
+		
 
 		camUnderlay = new FlxCamera();
 		camUnderlay.bgColor.alpha = 0;
@@ -244,10 +245,11 @@ class PlayState extends FunkinState
 
 					for (i in 0...holds)
 					{
-						final noteTime = noteTime + (steplength * i) + (steplength / 2);
+						final noteTime = noteTime + (steplength * i) + 5;
 						call('onPreNoteCreate', [noteTime, dir % 4, length, type, isPlayer, true, i == holds - 1, targetActorline]);
 						var hold = targetActorline.makeHoldNote(noteTime, newNote.lane, steplength, type, i == holds - 1);
 						hold.parentNote = newNote;
+						hold.offsetY = newNote.height / 2;
 
 						call('onNoteSustainCreate', [hold, targetActorline]);
 						call('onNoteCreate', [hold, targetActorline]);
@@ -365,11 +367,13 @@ class PlayState extends FunkinState
 		{
 			bf = newchar;
 			boyfriendLayer.insert(0, newchar);
+			iconP1.changeIcon(newchar.json.icon);
 		}
 		else if (type == DAD)
 		{
 			dad = newchar;
 			dadLayer.insert(0, newchar);
+			iconP2.changeIcon(newchar.json.icon);
 		}
 		charToChange = null;
 

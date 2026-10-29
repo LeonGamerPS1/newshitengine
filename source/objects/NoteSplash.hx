@@ -37,7 +37,9 @@ class NoteSplash extends FlxSprite
 
 		animation.play('note' + (strumNote.lane) % 4 + '-' + FlxG.random.int(0, 1), true);
 		animation.curAnim.frameRate = 24 + FlxG.random.int(-5, 5);
-		antialiasing = true;
+		
+		antialiasing = strumNote.antialiasing;
+		scale.set(strumNote.scale.x,strumNote.scale.y);
 
 		updateHitbox();
 		centerOffsets();

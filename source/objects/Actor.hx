@@ -63,8 +63,7 @@ class Actor extends FlxOffsetSprite
 		if (animation.curAnim != null)
 		{
 			centerOffsets();
-			if (anim == 'confirm')
-				offset.subtract(13, 13);
+			centerOrigin();
 		}
 	}
 }
