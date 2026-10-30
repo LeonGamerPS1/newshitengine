@@ -21,6 +21,7 @@ import flixel.util.*;
 import flixel.util.FlxTimer;
 import haxe.Json;
 import haxe.ds.StringMap;
+import objects.ui.Alphabet;
 import openfl.Assets as OpenFLAssets;
 import states.*;
 #end

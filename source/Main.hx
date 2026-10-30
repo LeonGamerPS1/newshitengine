@@ -21,7 +21,7 @@ class Main extends Sprite
 
 		super();
 
-		addChild(new FlxGame(0, 0, InitState, 64, 64, true));
+		addChild(new FlxGame(1280,720, InitState, 64, 64, true));
 
 		debugDisplay = new FunkinDebugDisplay(10, 10, 0xFFFFFF);
 		addChild(debugDisplay);

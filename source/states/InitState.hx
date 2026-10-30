@@ -1,5 +1,6 @@
 package states;
 
+import backend.ClientPrefs;
 import backend.Song;
 import backend.input.Controls;
 import debug.FunkinDebugDisplay;
@@ -72,13 +73,14 @@ class InitState extends FunkinState
 		trace('hxcpp_debug_server is disabled! This build does not support debugging.');
 		#end
 
-		FlxG.scaleMode = new flixel.system.scaleModes.RatioScaleMode(true);
 		FlxG.signals.gameResized.add(onGameResized);
 
-		FlxG.scaleMode = new AspectRatioFillScale();
 		FlxG.signals.preStateSwitch.add(Conductor.reset);
 
+		
+
 		Controls.init();
+		ClientPrefs.init();
 
 		modding.Mods.init();
 		trace('loaded ' + modding.Mods.mods.length + ' mods');
@@ -184,31 +186,3 @@ class InitState extends FunkinState
 	}
 }
 
-class AspectRatioFillScale extends BaseScaleMode
-{
-	override function onMeasure(windowWidth:Int, windowHeight:Int):Void
-	{
-		// 1. Berechne die Skalierungsfaktoren für beide Achsen
-		var scaleX:Float = windowWidth / FlxG.width;
-		var scaleY:Float = windowHeight / FlxG.height;
-
-		// 2. Nutze den KLEINEREN Faktor, um Verzerrung zu verhindern
-		var finalScale:Float = (scaleX < scaleY) ? scaleX : scaleY;
-
-		// 3. Setze die Spielgröße exakt auf die Fenstergröße (beseitigt die Balken)
-		gameSize.set(windowWidth, windowHeight);
-
-		// 4. Skaliere das Spiel ohne Verzerrung
-		scale.set(finalScale, finalScale);
-
-		// 5. Keine Offsets – das Spiel nutzt den vollen Canvas
-		offset.set(0, 0);
-
-		// 6. Passe die Kamera-Größe an, damit sie Breite und Höhe komplett ausfüllt
-		if (FlxG.camera != null)
-		{
-			FlxG.camera.width = Math.ceil(windowWidth / finalScale);
-			FlxG.camera.height = Math.ceil(windowHeight / finalScale);
-		}
-	}
-}

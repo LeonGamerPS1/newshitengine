@@ -3,10 +3,6 @@
 		"profile": "default",
 		"pkgs": [
 			{
-				"name": "flixel",
-				"link": "https://github.com/ACrazyTown/flixel.git"
-			},
-			{
 				"name": "flixel-addons",
 				"version": "3.3.2"
 			},
@@ -38,6 +34,11 @@
 			{
 				"name": "hxcpp",
 				"version": "4.3.2"
+			},
+			{
+				"name": "flixel",
+				"link": "https://github.com/ACrazyTown/flixel.git",
+				"branch": "seperate-renderer"
 			}
 		]
 	}

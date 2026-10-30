@@ -14,6 +14,7 @@ class MainMenu extends FunkinState
 	override function create()
 	{
 		super.create();
+	
 		items = [];
 		bg = new FlxSprite(0, 0, Paths.getGraphic('menuBG'));
 		bg.scrollFactor.set();
@@ -83,6 +84,8 @@ class MainMenu extends FunkinState
 						selectedSmth = false;
 					case 'freeplay':
 						Main.switchState(new PlayState());
+					case 'options':
+						Main.switchState(new OptionsState());
 				}
 			});
 		}

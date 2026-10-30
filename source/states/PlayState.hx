@@ -16,6 +16,7 @@ import modding.scripts.BaseScript;
 import objects.Actor;
 import objects.ActorLine;
 import objects.Note;
+import objects.effects.CameraCopySprite;
 import objects.gameplay.BaseStage;
 import objects.gameplay.Character;
 import objects.gameplay.stages.Week1;
@@ -95,7 +96,7 @@ class PlayState extends FunkinState
 		super.create();
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
-		
+
 		characterChangeMapDad = new Map<String, Character>();
 		characterChangeMapGF = new Map<String, Character>();
 		characterChangeMapBF = new Map<String, Character>();
@@ -105,7 +106,6 @@ class PlayState extends FunkinState
 
 		camHUD = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
-		
 
 		camUnderlay = new FlxCamera();
 		camUnderlay.bgColor.alpha = 0;
@@ -292,6 +292,8 @@ class PlayState extends FunkinState
 
 		call('onCreatePost');
 		trace(scripts);
+
+	
 	}
 
 	public var stageJSON:StageFile;
@@ -691,7 +693,8 @@ class PlayState extends FunkinState
 		super.destroy();
 	}
 
-	function endSong() {
+	function endSong()
+	{
 		Main.switchState(new MainMenu());
 	}
 }
