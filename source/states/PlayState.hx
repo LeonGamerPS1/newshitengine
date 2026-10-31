@@ -1,5 +1,6 @@
 package states;
 
+import backend.ClientPrefs;
 import backend.Scoring;
 import backend.ScriptLoader;
 import backend.Song;
@@ -85,7 +86,7 @@ class PlayState extends FunkinState
 
 	public var modManager:ModchartSystem;
 
-	public var downscroll:Bool = true;
+	public var downscroll:Bool = ClientPrefs.data.downscroll;
 
 	public var characterChangeMapDad:Map<String, Character>;
 	public var characterChangeMapGF:Map<String, Character>;
@@ -94,9 +95,10 @@ class PlayState extends FunkinState
 	override public function create()
 	{
 		super.create();
+		Conductor.offset = ClientPrefs.data.offset;
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
-
+		
 		characterChangeMapDad = new Map<String, Character>();
 		characterChangeMapGF = new Map<String, Character>();
 		characterChangeMapBF = new Map<String, Character>();
@@ -292,8 +294,7 @@ class PlayState extends FunkinState
 
 		call('onCreatePost');
 		trace(scripts);
-
-	
+		FlxG.stage.window.width += 1;
 	}
 
 	public var stageJSON:StageFile;

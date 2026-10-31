@@ -60,6 +60,8 @@ class OptionsState extends FunkinState
 					default:
 						FlxG.sound.play(Paths.getSound('sounds/cancelMenu'));
 						canInteract = true;
+					case 'gameplay':
+						FlxG.switchState(new states.options.Gameplay());
 				}
 			});
 		}

@@ -1,6 +1,8 @@
 package objects;
 
-class FlxOffsetSprite extends FlxSprite
+import animate.FlxAnimate;
+
+class FlxOffsetSprite extends FlxAnimate
 {
 	/**
 	 * The position of the sprite's render offset relative to its original  position/xy. For example, `offset.x = 10;` will

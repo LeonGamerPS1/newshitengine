@@ -76,11 +76,12 @@ class InitState extends FunkinState
 		FlxG.signals.gameResized.add(onGameResized);
 
 		FlxG.signals.preStateSwitch.add(Conductor.reset);
-
+	
 		
 
 		Controls.init();
 		ClientPrefs.init();
+		FlxG.stage.window.frameRate = FlxG.drawFramerate = FlxG.updateFramerate = ClientPrefs.data.refreshRate;
 
 		modding.Mods.init();
 		trace('loaded ' + modding.Mods.mods.length + ' mods');
